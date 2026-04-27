@@ -1,101 +1,274 @@
 import { motion } from 'framer-motion';
-import { BookOpen, Shield, AlertTriangle, Phone, FileSearch, AudioWaveform, Smartphone, ExternalLink, Brain, TrendingUp } from 'lucide-react';
+import {
+  AlertTriangle,
+  AudioWaveform,
+  BookOpen,
+  ExternalLink,
+  FileSearch,
+  RefreshCw,
+  Shield,
+  Smartphone,
+} from 'lucide-react';
 import GlowCard from '../components/shared/GlowCard';
 import PageWrapper from '../components/layout/PageWrapper';
+import ShieldLoader from '../components/shared/ShieldLoader';
+import useFraudIntel from '../hooks/useFraudIntel';
 
-const fraudTypes = [
+const playbooks = [
   {
-    icon: AudioWaveform, color: '#3b82f6', title: 'Deepfake Voice Scams',
-    desc: 'Scammers use AI to clone voices of bank officials, family members, or HR personnel to trick victims into transferring money or sharing OTPs.',
-    tips: ['Always verify calls by calling back on official numbers', 'Be suspicious of urgency or pressure tactics', 'Ask personal questions only the real person would know', 'Never share OTP over phone calls'],
-    stat: '₹2,800 Cr lost in 2024',
+    title: 'Voice Deepfake Calls',
+    icon: AudioWaveform,
+    color: '#3b82f6',
+    actions: [
+      'Disconnect and call back using the official number from website/app.',
+      'Never share OTP, card PIN, UPI PIN, or remote access permissions.',
+      'Demand a verifiable reference ID before taking action.',
+    ],
   },
   {
-    icon: Smartphone, color: '#f59e0b', title: 'SIM Swap Attacks',
-    desc: 'Fraudsters convince telecom operators to transfer your number to a new SIM, then intercept your OTPs to drain bank accounts.',
-    tips: ['Set a SIM lock PIN with your operator', 'Enable app-based 2FA instead of SMS', 'Monitor unexpected "No Service" on your phone', 'Report SIM swap immediately to bank & police'],
-    stat: '₹1,200 Cr lost in 2024',
+    title: 'SIM Swap Alerts',
+    icon: Smartphone,
+    color: '#f59e0b',
+    actions: [
+      'If signal suddenly drops, call your operator from another device.',
+      'Freeze net-banking/UPI immediately and notify your bank hotline.',
+      'Switch critical accounts to app-based 2FA where possible.',
+    ],
   },
   {
-    icon: FileSearch, color: '#ef4444', title: 'Fake Job Offers',
-    desc: 'Scam messages promising high salaries for no experience, asking for registration fees or personal documents before any real interview.',
-    tips: ['Legitimate companies never charge candidates', 'Verify company on MCA21 (mca.gov.in)', 'Check for Gmail/Yahoo official emails (red flag)', 'Never pay "registration" or "processing" fees'],
-    stat: '₹3,100 Cr lost in 2024',
-  },
-  {
-    icon: Phone, color: '#8b5cf6', title: 'Phishing & Vishing',
-    desc: 'Fake calls, SMS, or emails impersonating banks, government, or delivery services to steal personal information and banking credentials.',
-    tips: ['Never click links in unexpected SMS/emails', 'Banks never ask for full card number via phone', 'Check URLs carefully for misspellings', 'Report phishing to cybercrime.gov.in'],
-    stat: '₹4,200 Cr lost in 2024',
+    title: 'Job Offer Fraud',
+    icon: FileSearch,
+    color: '#ef4444',
+    actions: [
+      'Reject any role that asks for registration or processing fee.',
+      'Verify company domain email, MCA listing, and recruiter identity.',
+      'Treat urgency, no-interview hiring, and WhatsApp-only flow as red flags.',
+    ],
   },
 ];
 
 const reportLinks = [
-  { name: 'National Cyber Crime Portal', url: 'https://cybercrime.gov.in', desc: 'Official Government of India portal' },
-  { name: 'Helpline: 1930', url: 'tel:1930', desc: 'National cyber fraud helpline' },
-  { name: 'RBI Sachet', url: 'https://sachet.rbi.org.in', desc: 'Report financial fraud' },
+  {
+    name: 'National Cyber Crime Portal',
+    url: 'https://cybercrime.gov.in',
+    desc: 'Report cyber fraud incidents with evidence.',
+  },
+  {
+    name: 'Cyber Helpline 1930',
+    url: 'tel:1930',
+    desc: 'Emergency reporting for financial cyber fraud.',
+  },
+  {
+    name: 'RBI Sachet',
+    url: 'https://sachet.rbi.org.in',
+    desc: 'Financial fraud and unregulated scheme reporting.',
+  },
 ];
 
+function formatTime(value) {
+  if (!value) return 'Just now';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Just now';
+
+  return new Intl.DateTimeFormat('en-IN', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date);
+}
+
+function compactSource(value = '') {
+  return value.length > 24 ? `${value.slice(0, 24)}...` : value;
+}
+
 export default function Education() {
+  const { items, loading, error, refresh, lastUpdated } = useFraudIntel(12);
+  const validItems = items.filter(
+    (item) => item?.title && item.title.trim().length > 20 && item?.link && item.link !== '#'
+  );
+  const tickerItems = validItems.slice(0, 8);
+  const canAutoScroll = validItems.length > 2;
+
   return (
     <PageWrapper>
-      <div style={{ maxWidth: '1200px' }}>
-        <div className="page-header">
-          <h1><BookOpen size={28} style={{ color: '#8b5cf6' }} /> Fraud Intel Hub</h1>
-          <p>Learn to identify and protect yourself from digital fraud</p>
+      <div className="edu-page">
+        <div className="page-header edu-header">
+          <h1>
+            <BookOpen size={28} style={{ color: 'var(--color-warning)' }} />
+            Fraud Intel Live
+          </h1>
+          <p>
+            Live external cyber-fraud headlines with response playbooks for Voice Shield, SIM Guard, and Job Shield.
+          </p>
+          <div className="edu-header-actions">
+            <span>Updated: {lastUpdated ? formatTime(lastUpdated) : 'Waiting for first sync'}</span>
+            <button className="btn btn-ghost btn-sm" onClick={() => refresh()} type="button">
+              <RefreshCw size={14} />
+              Refresh Feed
+            </button>
+          </div>
         </div>
 
-        {/* Fraud Types */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '40px' }}>
-          {fraudTypes.map((fraud, i) => (
-            <motion.div key={fraud.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
-              <GlowCard color={fraud.color === '#3b82f6' ? 'info' : fraud.color === '#f59e0b' ? 'warning' : fraud.color === '#ef4444' ? 'danger' : 'purple'}>
-                <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                  <div style={{ width: '48px', height: '48px', borderRadius: 'var(--radius-md)', background: `${fraud.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <fraud.icon size={24} style={{ color: fraud.color }} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: '280px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                      <h3 style={{ fontSize: '1.2rem' }}>{fraud.title}</h3>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-danger)', background: 'var(--color-danger-dim)', padding: '3px 8px', borderRadius: '4px' }}>
-                        {fraud.stat}
-                      </span>
-                    </div>
-                    <p style={{ color: 'var(--color-text-secondary)', marginBottom: '16px', lineHeight: 1.7 }}>{fraud.desc}</p>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '8px' }}>
-                      {fraud.tips.map((tip, j) => (
-                        <div key={j} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '8px 12px', background: 'var(--color-surface-2)', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem' }}>
-                          <Shield size={14} style={{ color: 'var(--color-primary)', marginTop: '2px', flexShrink: 0 }} />
-                          <span style={{ color: 'var(--color-text-secondary)' }}>{tip}</span>
+        <motion.div
+          className="edu-ticker-shell"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+        >
+          {loading ? (
+            <div className="edu-ticker-placeholder">Syncing live fraud intel feed...</div>
+          ) : error ? (
+            <div className="edu-ticker-error">
+              <AlertTriangle size={16} />
+              <span>Live feed unavailable: {error}</span>
+            </div>
+            ) : tickerItems.length > 0 ? (
+            <div className="edu-ticker-track">
+              {[...tickerItems, ...tickerItems].map((item, idx) => (
+                <a
+                  key={`${item.id}-${idx}`}
+                  href={item.link}
+                  className="edu-ticker-item"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span className="edu-ticker-source">{compactSource(item.source)}</span>
+                  <span className="edu-ticker-title">{item.title}</span>
+                </a>
+              ))}
+            </div>
+            ) : (
+            <div className="edu-ticker-placeholder">No live items found right now.</div>
+          )}
+        </motion.div>
+
+        <div className="edu-main-grid">
+          <GlowCard color="warning" className="edu-live-rail">
+            <div className="edu-panel-head">
+              <div>
+                <div className="panel-kicker">Auto scrolling</div>
+                <h3>Threat Stream</h3>
+              </div>
+              <span className="edu-rail-status">{canAutoScroll ? 'Live loop' : `${validItems.length} headlines`}</span>
+            </div>
+
+            {loading ? (
+              <ShieldLoader text="Fetching live headlines..." size={40} />
+            ) : error ? (
+              <div className="empty-state empty-state-inline">
+                <AlertTriangle size={24} />
+                <div>
+                  <strong>Feed temporarily unavailable</strong>
+                  <p>{error}</p>
+                </div>
+              </div>
+            ) : validItems.length === 0 ? (
+              <div className="empty-state empty-state-inline">
+                <AlertTriangle size={24} />
+                <div>
+                  <strong>No valid live updates right now</strong>
+                  <p>Feed returned incomplete items. Try refresh in a moment.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="edu-rail-viewport">
+                <div className={`edu-rail-marquee ${canAutoScroll ? 'edu-rail-marquee-animated' : ''}`}>
+                  <div className="edu-rail-group">
+                    {validItems.map((item, index) => (
+                      <a
+                        className="edu-rail-item"
+                        href={item.link}
+                        key={`${item.id}-rail-${index}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <div className="edu-rail-topline">
+                          <span>{item.source}</span>
+                          <ExternalLink size={14} />
                         </div>
+                        <h4>{item.title}</h4>
+                        <p>{item.summary || 'Tap to view full intel coverage from source.'}</p>
+                        <span className="edu-rail-time">{formatTime(item.publishedAt)}</span>
+                      </a>
+                    ))}
+                  </div>
+
+                  {canAutoScroll && (
+                    <div className="edu-rail-group" aria-hidden="true">
+                      {validItems.map((item, index) => (
+                        <a
+                          className="edu-rail-item"
+                          href={item.link}
+                          key={`${item.id}-rail-loop-${index}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          tabIndex={-1}
+                        >
+                          <div className="edu-rail-topline">
+                            <span>{item.source}</span>
+                            <ExternalLink size={14} />
+                          </div>
+                          <h4>{item.title}</h4>
+                          <p>{item.summary || 'Tap to view full intel coverage from source.'}</p>
+                          <span className="edu-rail-time">{formatTime(item.publishedAt)}</span>
+                        </a>
                       ))}
                     </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </GlowCard>
+
+          <GlowCard>
+            <div className="edu-panel-head">
+              <div>
+                <div className="panel-kicker">Action mode</div>
+                <h3>Rapid Response Playbooks</h3>
+              </div>
+            </div>
+            <div className="edu-playbooks">
+              {playbooks.map((playbook) => (
+                <div className="edu-playbook" key={playbook.title}>
+                  <div className="edu-playbook-head">
+                    <div className="edu-playbook-icon" style={{ background: `${playbook.color}20` }}>
+                      <playbook.icon size={18} style={{ color: playbook.color }} />
+                    </div>
+                    <h4>{playbook.title}</h4>
+                  </div>
+                  <div className="edu-tip-list">
+                    {playbook.actions.map((action) => (
+                      <div className="edu-tip-item" key={action}>
+                        <Shield size={13} />
+                        <span>{action}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </GlowCard>
-            </motion.div>
-          ))}
-        </div>
+              ))}
+            </div>
+          </GlowCard>
 
-        {/* Report Links */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
-          <h3 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <AlertTriangle size={18} style={{ color: 'var(--color-danger)' }} /> Report Fraud
-          </h3>
-          <div className="grid-3">
-            {reportLinks.map((link) => (
-              <a key={link.name} href={link.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                <GlowCard style={{ cursor: 'pointer' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <h4 style={{ fontSize: '1rem' }}>{link.name}</h4>
-                    <ExternalLink size={16} style={{ color: 'var(--color-muted)' }} />
+          <GlowCard className="edu-report-panel">
+            <div className="edu-panel-head">
+              <div>
+                <div className="panel-kicker">Escalation</div>
+                <h3>Report and Recover</h3>
+              </div>
+            </div>
+            <div className="edu-report-grid">
+              {reportLinks.map((link) => (
+                <a key={link.name} href={link.url} rel="noopener noreferrer" target="_blank" className="edu-report-link">
+                  <div>
+                    <h4>{link.name}</h4>
+                    <p>{link.desc}</p>
                   </div>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>{link.desc}</p>
-                </GlowCard>
-              </a>
-            ))}
-          </div>
-        </motion.div>
+                  <ExternalLink size={14} />
+                </a>
+              ))}
+            </div>
+          </GlowCard>
+        </div>
       </div>
     </PageWrapper>
   );

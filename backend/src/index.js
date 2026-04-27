@@ -66,6 +66,17 @@ initSimSwapSocket(io);
 
 // Start server
 const PORT = process.env.PORT || 4000;
+server.on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    console.error(`\n[Backend] Port ${PORT} is already in use.`);
+    console.error("[Backend] Stop the process using that port or run the launcher to reclaim stale listeners.");
+    process.exit(1);
+  }
+
+  console.error("[Backend] Server error:", err);
+  process.exit(1);
+});
+
 server.listen(PORT, () => {
   console.log(`\n🛡️  KAVACH Backend running on http://localhost:${PORT}`);
   console.log(`📡 WebSocket ready on ws://localhost:${PORT}`);
