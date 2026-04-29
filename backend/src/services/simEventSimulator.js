@@ -107,6 +107,7 @@ function injectAnomaly(socket, phoneNumber, anomalyType) {
  */
 async function performIntegrityScan(socket, phoneNumber, apiKey) {
   const state = ACTIVE_SENSORS.get(phoneNumber) || initSensor(phoneNumber);
+  const clientIp = socket.handshake?.headers?.['x-forwarded-for'] || socket.handshake?.address;
   
   // Start scan event
   socket.emit('sim-event', makeEvent(phoneNumber, 'INTEGRITY_SCAN_START', 'LOW', 'Connecting to global carrier network for integrity check...', []));
@@ -114,10 +115,10 @@ async function performIntegrityScan(socket, phoneNumber, apiKey) {
   // Simulate network delay
   await new Promise(r => setTimeout(r, 1500));
 
-  const carrierData = await lookupPhone(phoneNumber, apiKey);
+  const carrierData = await lookupPhone(phoneNumber, apiKey, { clientIp });
   
   const scanEvent = makeEvent(phoneNumber, 'INTEGRITY_SCAN_COMPLETE', carrierData.risky ? 'HIGH' : 'LOW', 
-    `Scan complete for ${phoneNumber}. Carrier: ${carrierData.carrier}. SIM Status: ${carrierData.sim_changed ? 'SWAPPED' : 'OK'}.`, 
+    `Scan complete for ${phoneNumber}. Carrier/ISP: ${carrierData.carrier || carrierData.session_isp || 'Unknown'}. SIM Status: ${carrierData.sim_changed ? 'SWAPPED' : 'OK'}.`, 
     carrierData.sim_changed ? ['NEW_SIM_SERIAL'] : []);
   
   scanEvent.details = carrierData;
