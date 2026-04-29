@@ -1,11 +1,21 @@
 import { useCallback, useEffect, useState } from 'react';
 
-const DEFAULT_FEED_URL =
-  import.meta.env.VITE_FRAUD_INTEL_FEED_URL ||
-  'https://news.google.com/rss/search?q=(cyber%20fraud%20OR%20deepfake%20scam%20OR%20sim%20swap%20OR%20job%20scam)%20when%3A7d&hl=en-IN&gl=IN&ceid=IN%3Aen';
+const GOOGLE_RSS_BASE = 'https://news.google.com/rss/search';
+
+const FEED_QUERIES = import.meta.env.VITE_FRAUD_INTEL_FEED_URL
+  ? [import.meta.env.VITE_FRAUD_INTEL_FEED_URL]
+  : [
+      'cyber fraud when:1d',
+      'deepfake scam when:1d',
+      'sim swap fraud when:1d',
+      'job scam when:1d',
+      'upi fraud when:1d',
+    ];
 
 const RSS_TO_JSON_URL =
   import.meta.env.VITE_RSS_TO_JSON_URL || 'https://api.rss2json.com/v1/api.json';
+
+const AUTO_REFRESH_MS = 10 * 60 * 1000;
 
 function stripHtml(value = '') {
   return value.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
@@ -34,6 +44,38 @@ function normalizeItem(item, index) {
   };
 }
 
+function buildFeedUrl(query) {
+  if (query.startsWith('http://') || query.startsWith('https://')) {
+    return query;
+  }
+
+  const params = new URLSearchParams({
+    q: `(${query})`,
+    hl: 'en-IN',
+    gl: 'IN',
+    ceid: 'IN:en',
+  });
+
+  return `${GOOGLE_RSS_BASE}?${params.toString()}`;
+}
+
+async function fetchFeedItems(feedUrl) {
+  const url = `${RSS_TO_JSON_URL}?rss_url=${encodeURIComponent(feedUrl)}&cache_bust=${Date.now()}`;
+  const response = await fetch(url, { cache: 'no-store' });
+
+  if (!response.ok) {
+    throw new Error(`Feed request failed with ${response.status}`);
+  }
+
+  const payload = await response.json();
+
+  if (payload.status && payload.status !== 'ok') {
+    throw new Error(payload.message || 'Feed service returned an error');
+  }
+
+  return payload.items || [];
+}
+
 export default function useFraudIntel(limit = 6) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,20 +87,31 @@ export default function useFraudIntel(limit = 6) {
     setError('');
 
     try {
-      const url = `${RSS_TO_JSON_URL}?rss_url=${encodeURIComponent(DEFAULT_FEED_URL)}`;
-      const response = await fetch(url);
+      const feedResults = await Promise.allSettled(
+        FEED_QUERIES.map((query) => fetchFeedItems(buildFeedUrl(query)))
+      );
 
-      if (!response.ok) {
-        throw new Error(`Feed request failed with ${response.status}`);
+      if (feedResults.every((result) => result.status === 'rejected')) {
+        throw feedResults[0].reason || new Error('Unable to load live fraud intel');
       }
 
-      const payload = await response.json();
+      const merged = feedResults.flatMap((result) => (result.status === 'fulfilled' ? result.value : []));
+      const deduped = [];
+      const seen = new Set();
 
-      if (payload.status && payload.status !== 'ok') {
-        throw new Error(payload.message || 'Feed service returned an error');
-      }
+      merged.forEach((item, index) => {
+        const normalized = normalizeItem(item, index);
+        const fingerprint = `${normalized.link || ''}::${normalized.title.toLowerCase()}`;
 
-      const normalized = (payload.items || []).slice(0, limit).map(normalizeItem);
+        if (!seen.has(fingerprint)) {
+          seen.add(fingerprint);
+          deduped.push(normalized);
+        }
+      });
+
+      deduped.sort((left, right) => new Date(right.publishedAt || 0) - new Date(left.publishedAt || 0));
+
+      const normalized = deduped.slice(0, limit);
       setItems(normalized);
       setLastUpdated(new Date());
     } catch (err) {
@@ -74,7 +127,14 @@ export default function useFraudIntel(limit = 6) {
       fetchFeed();
     }, 0);
 
-    return () => window.clearTimeout(timeoutId);
+    const intervalId = window.setInterval(() => {
+      fetchFeed(true);
+    }, AUTO_REFRESH_MS);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.clearInterval(intervalId);
+    };
   }, [fetchFeed]);
 
   return {

@@ -27,6 +27,7 @@ const useKavachStore = create((set, get) => ({
   simRiskScore: 0,
   simAlerts: [],
   simFrozen: false,
+  simCarrierData: null,
   
   // Job scanner module state
   jobResult: null,
@@ -66,6 +67,7 @@ const useKavachStore = create((set, get) => ({
     simAlerts: [alert, ...state.simAlerts],
   })),
   setSimRiskScore: (score) => set({ simRiskScore: score }),
+  setSimCarrierData: (data) => set({ simCarrierData: data }),
   freezeTransactions: () => set({ simFrozen: true }),
   unfreezeSim: () => set({ simFrozen: false, simAlerts: [] }),
   resetSim: () => set({ simRegistered: false, simPhoneNumber: '', simEvents: [], simRiskScore: 0, simAlerts: [], simFrozen: false }),

@@ -21,7 +21,7 @@ function AppContent() {
       <Navbar />
       {!isLanding && <Sidebar />}
       <main
-        className={isLanding ? '' : 'main-content'}
+        className={isLanding ? 'landing-content' : 'main-content'}
         style={!isLanding && !sidebarOpen ? { marginLeft: 0 } : {}}
       >
         <AnimatePresence mode="wait">
