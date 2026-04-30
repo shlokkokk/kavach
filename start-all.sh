@@ -254,11 +254,11 @@ cleanup() {
     fi
   done
 
-  # On Windows, direct PID killing often misses children started via PowerShell/NPM.
-  # We force-kill anything still listening on our project ports.
-  kill_port_listener_windows "$AUDIO_PORT"
-  kill_port_listener_windows "$BACKEND_PORT"
-  kill_port_listener_windows "$FRONTEND_PORT"
+  # On Ctrl+C, we are aggressive. We force-kill anything still listening on our project ports
+  # to ensure no zombie processes are left behind.
+  nuke_port_windows "$AUDIO_PORT"
+  nuke_port_windows "$BACKEND_PORT"
+  nuke_port_windows "$FRONTEND_PORT"
 
   wait || true
   log "All modules stopped."
@@ -319,18 +319,37 @@ kill_port_listener_windows() {
     return 1
   fi
 
+  # Polite Check: Only kill if the command line matches our stack
   powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "
     \$port = \$args[0]
-    \$conns = Get-NetTCPConnection -LocalPort \$port -State Listen -ErrorAction SilentlyContinue
-    if (-not \$conns) { exit 0 }
-    \$pids = \$conns | Select-Object -ExpandProperty OwningProcess -Unique
+    \$pids = (Get-NetTCPConnection -LocalPort \$port -ErrorAction SilentlyContinue).OwningProcess | Select-Object -Unique
+    if (-not \$pids) { exit 0 }
     foreach (\$pid in \$pids) {
+      if (-not \$pid) { continue }
       \$proc = Get-CimInstance Win32_Process -Filter \"ProcessId=\$pid\" -ErrorAction SilentlyContinue
       if (\$null -eq \$proc) { continue }
       \$cmd = \$proc.CommandLine
-      if (\$cmd -match 'kavach|hackbaroda|node|python|npm|vite') {
+      if (\$cmd -match 'node|python|npm|vite|esbuild|kavach|hackbaroda') {
         Stop-Process -Id \$pid -Force -ErrorAction SilentlyContinue
-        Write-Host \"killed:\$pid\"
+      }
+    }
+  " "$port" >/dev/null 2>&1
+}
+
+nuke_port_windows() {
+  local port="$1"
+  if ! command -v powershell.exe >/dev/null 2>&1; then
+    return 1
+  fi
+
+  # Aggressive: Kill everything on this port (called during Ctrl+C cleanup)
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "
+    \$port = \$args[0]
+    \$conns = Get-NetTCPConnection -LocalPort \$port -ErrorAction SilentlyContinue
+    if (\$conns) {
+      \$pids = \$conns.OwningProcess | Select-Object -Unique
+      foreach (\$pid in \$pids) {
+        Stop-Process -Id \$pid -Force -ErrorAction SilentlyContinue
       }
     }
   " "$port" >/dev/null 2>&1
