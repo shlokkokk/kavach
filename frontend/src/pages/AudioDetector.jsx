@@ -603,6 +603,58 @@ export default function AudioDetector() {
     : [];
   const hasFeatureSignal = features.some((f) => typeof f.normalizedValue === 'number' && f.normalizedValue > 0.1);
 
+  const loadSample = async (type) => {
+    if (file) {
+      toast.error('Please discard the current audio file before loading a sample.');
+      return;
+    }
+    
+    setLoading(true);
+    const toastId = toast.loading(`Loading ${type === 'ai' ? 'AI Deepfake' : 'Real Human'} sample...`);
+    
+    try {
+      const baseName = type === 'ai' ? 'ai_deepfake' : 'real_human';
+      const extensions = ['mp3', 'wav', 'ogg', 'm4a', 'webm'];
+      let foundBlob = null;
+      let foundExt = null;
+
+      // Try fetching common extensions until one succeeds
+      for (const ext of extensions) {
+        try {
+          const response = await fetch(`/samples/${baseName}.${ext}`, { method: 'HEAD' });
+          if (response.ok) {
+            const getResponse = await fetch(`/samples/${baseName}.${ext}`);
+            if (getResponse.ok) {
+              foundBlob = await getResponse.blob();
+              foundExt = ext;
+              break;
+            }
+          }
+        } catch (e) {
+          // Ignore fetch errors, keep trying other extensions
+        }
+      }
+
+      if (!foundBlob) {
+        throw new Error(`Sample not found. Please place an audio file named '${baseName}.[mp3|wav|ogg|etc]' in public/samples/`);
+      }
+      
+      const fileName = `${baseName}.${foundExt}`;
+      const mimeType = foundBlob.type || `audio/${foundExt}`;
+      const sampleFile = new File([foundBlob], fileName, { type: mimeType });
+      
+      setFile(sampleFile);
+      setResult(null);
+      setAudioUrl(URL.createObjectURL(sampleFile));
+      
+      toast.success(`${type === 'ai' ? 'AI' : 'Real'} sample loaded`, { id: toastId });
+    } catch (err) {
+      toast.error(err.message || 'Failed to load sample', { id: toastId });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <PageWrapper>
       <div className="app-shell">
@@ -647,6 +699,14 @@ export default function AudioDetector() {
                     <p style={{ fontSize: '0.82rem', color: 'var(--color-muted)' }}>MP3, WAV, OGG, M4A, WebM — Max 10MB</p>
                   </>
                 )}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '12px' }}>
+                <button className="btn btn-ghost btn-sm" onClick={() => loadSample('real')} disabled={!!file || loading}>
+                  Load Sample Human
+                </button>
+                <button className="btn btn-ghost btn-sm" onClick={() => loadSample('ai')} disabled={!!file || loading}>
+                  Load Sample AI
+                </button>
               </div>
             </GlowCard>
 
