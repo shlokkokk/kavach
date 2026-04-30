@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Shield, AudioWaveform, Smartphone, FileSearch, ArrowRight, TrendingUp, Users, AlertTriangle, IndianRupee, ChevronDown } from 'lucide-react';
+import KavachLogo from '../components/shared/KavachLogo';
 import ParticleBackground from '../components/shared/ParticleBackground';
 import GlowCard from '../components/shared/GlowCard';
 import { INDIA_FRAUD_STATS } from '../utils/constants';
@@ -82,7 +83,7 @@ export default function Landing() {
               transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
               style={{ display: 'inline-flex' }}
             >
-              <Shield size={64} style={{ color: 'var(--color-primary)', filter: 'drop-shadow(0 0 30px rgba(0,255,178,0.5))' }} />
+              <KavachLogo size={80} />
             </motion.div>
           </motion.div>
           
@@ -360,7 +361,7 @@ export default function Landing() {
         display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
         fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--color-muted)',
       }}>
-        <Shield size={14} style={{ color: 'var(--color-primary)' }} />
+        <KavachLogo size={16} />
         KAVACH — Built for India's Digital Safety
       </footer>
     </div>
