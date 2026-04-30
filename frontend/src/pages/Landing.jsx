@@ -62,10 +62,12 @@ export default function Landing() {
   return (
     <div className="landing-page">
       {/* Hero Section */}
-      <section className="landing-hero">
+      <section className="landing-hero landing-hero-ultra">
         <ParticleBackground count={60} />
         <div className="hero-grid-bg" />
         <div className="hero-radial" />
+        <div className="hero-radial hero-radial-2" />
+        <div className="hero-noise" />
         
         <motion.div
           variants={container}
@@ -117,6 +119,12 @@ export default function Landing() {
               </motion.button>
             </a>
           </motion.div>
+
+          <motion.div variants={item} className="hero-chip-row">
+            <span className="hero-chip">Live AI Defense</span>
+            <span className="hero-chip">Voice + SIM + Job Fraud</span>
+            <span className="hero-chip">Built for India</span>
+          </motion.div>
         </motion.div>
         
         {/* Scroll indicator */}
@@ -127,6 +135,32 @@ export default function Landing() {
         >
           <ChevronDown size={24} />
         </motion.div>
+      </section>
+
+      <section className="landing-glance">
+        <div className="landing-glance-grid">
+          <GlowCard color="primary">
+            <div className="k-panel-kicker">Why it wins</div>
+            <h3 style={{ marginBottom: '8px' }}>One connected fraud defense graph</h3>
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.92rem' }}>
+              KAVACH links signals across social engineering stages so risk is caught as a chain, not as isolated incidents.
+            </p>
+          </GlowCard>
+          <GlowCard color="warning">
+            <div className="k-panel-kicker">Response speed</div>
+            <h3 style={{ marginBottom: '8px' }}>Real-time module execution</h3>
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.92rem' }}>
+              Detection, verification, and mitigation actions are surfaced in one command center with operational clarity.
+            </p>
+          </GlowCard>
+          <GlowCard color="danger">
+            <div className="k-panel-kicker">Trust design</div>
+            <h3 style={{ marginBottom: '8px' }}>Actionable explanations</h3>
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.92rem' }}>
+              Every alert includes score context, visual evidence, and tactical next steps for confident decision making.
+            </p>
+          </GlowCard>
+        </div>
       </section>
 
       {/* Stats Section */}

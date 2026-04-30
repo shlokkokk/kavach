@@ -116,6 +116,14 @@ def analyze_audio_file(file_bytes: bytes, filename: str = "audio.wav") -> dict:
         # 3. Phase/Harmonic Consistency (HNR proxy)
         # AI voices are often "too perfect" harmonically compared to real human vocal cords
         harmonic_perfection = 1.0 - min(chroma_std / 0.25, 1.0) 
+        
+        # 4. Derived UI-facing metrics
+        # Keep scale in [0,1] so frontend can consistently render percentages.
+        voice_print_score = 1.0 - harmonic_perfection
+        # Normalize pitch variance to a stable 0..1 band.
+        pitch_variance_norm = min(max(pitch_variance / 0.18, 0.0), 1.0)
+        # Normalize mean ZCR into a useful display range.
+        zero_crossing_rate_norm = min(max(zcr_mean / 0.12, 0.0), 1.0)
 
         deepfake_indicators = {
             'mfcc_anomaly': mfcc_anomaly,                        # Synthetic MFCC pattern
@@ -174,6 +182,9 @@ def analyze_audio_file(file_bytes: bytes, filename: str = "audio.wav") -> dict:
             "features": {
                 "mfccAnomaly": float(round(float(mfcc_anomaly), 3)),
                 "spectralFlux": float(round(float(flux_consistency), 3)),
+                "voicePrintScore": float(round(float(voice_print_score), 3)),
+                "pitchVariance": float(round(float(pitch_variance_norm), 3)),
+                "zeroCrossingRate": float(round(float(zero_crossing_rate_norm), 3)),
                 "silencePurity": float(round(float(silence_purity), 3)),
                 "highFreqFlatness": float(round(float(high_freq_flatness), 3)),
                 "harmonicPerfection": float(round(float(harmonic_perfection), 3)),

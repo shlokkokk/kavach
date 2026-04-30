@@ -167,14 +167,32 @@ export default function AudioDetector() {
     }
   };
 
-  const features = result?.features ? [
-    { label: 'MFCC Anomaly', value: (result.features.mfccAnomaly || 0) * 100 },
-    { label: 'Spectral Flux', value: (result.features.spectralFlux || 0) * 100 },
-    { label: 'Voice Print', value: (result.features.voicePrintScore || 0) * 100 },
-    { label: 'Pitch Variance', value: (result.features.pitchVariance || 0) * 100 },
-    { label: 'Energy Consistency', value: (result.features.energyConsistency || 0) * 100 },
-    { label: 'Zero Crossing Rate', value: (result.features.zeroCrossingRate || 0) * 100 },
-  ] : [];
+  const featureSource = result?.features || null;
+  const pickMetric = (obj, keys) => {
+    for (const key of keys) {
+      if (typeof obj?.[key] === 'number') return obj[key];
+    }
+    return null;
+  };
+  const features = featureSource
+    ? [
+        { label: 'MFCC Anomaly', value: pickMetric(featureSource, ['mfccAnomaly', 'mfcc_anomaly']) },
+        { label: 'Spectral Flux', value: pickMetric(featureSource, ['spectralFlux', 'spectral_flux', 'spectral_flux_consistency']) },
+        { label: 'Voice Print', value: pickMetric(featureSource, ['voicePrintScore', 'voice_print_score']) },
+        { label: 'Pitch Variance', value: pickMetric(featureSource, ['pitchVariance', 'pitch_variance']) },
+        { label: 'Energy Consistency', value: pickMetric(featureSource, ['energyConsistency', 'energy_flatness']) },
+        { label: 'Zero Crossing Rate', value: pickMetric(featureSource, ['zeroCrossingRate', 'zero_crossing_rate']) },
+        { label: 'Silence Purity', value: pickMetric(featureSource, ['silencePurity', 'silence_purity']) },
+        { label: 'High Freq Flatness', value: pickMetric(featureSource, ['highFreqFlatness', 'high_freq_flatness']) },
+        { label: 'Harmonic Perfection', value: pickMetric(featureSource, ['harmonicPerfection', 'harmonic_perfection']) },
+      ]
+        .filter((item) => item.value !== null || ['Voice Print', 'Pitch Variance', 'Zero Crossing Rate'].includes(item.label))
+        .map((item) => ({
+          ...item,
+          normalizedValue: item.value === null ? null : item.value * 100,
+        }))
+    : [];
+  const hasFeatureSignal = features.some((f) => typeof f.normalizedValue === 'number' && f.normalizedValue > 0.1);
 
   return (
     <PageWrapper>
@@ -228,11 +246,6 @@ export default function AudioDetector() {
                     <Square size={16} /> Stop Recording
                   </button>
                 )}
-                {!!file && (
-                  <button className="btn btn-ghost btn-sm" onClick={resetAudioSelection} type="button">
-                    Replace Current Audio
-                  </button>
-                )}
               </div>
               <div className="k-inline-metrics" style={{ marginTop: '12px' }}>
                 <div className="k-inline-metric">
@@ -253,15 +266,21 @@ export default function AudioDetector() {
             {/* File info + analyze */}
             {file && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                <GlowCard color="info">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <GlowCard color="info" className="audio-file-card">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <FileAudio size={20} style={{ color: '#3b82f6' }} />
                     <div>
                       <div style={{ fontWeight: 600 }}>{file.name}</div>
                       <div style={{ fontSize: '0.82rem', color: 'var(--color-muted)' }}>{(file.size / 1024 / 1024).toFixed(2)} MB</div>
                     </div>
+                    </div>
+                    <span className="badge badge-info">Ready</span>
                   </div>
                   {audioUrl && <audio controls src={audioUrl} style={{ width: '100%', marginBottom: '12px' }} />}
+                  <div style={{ fontSize: '0.75rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', marginBottom: '10px' }}>
+                    Tip: use 8s+ clean speech for higher signal confidence.
+                  </div>
                   <button className="btn btn-primary" onClick={analyzeAudio} disabled={loading} style={{ width: '100%' }} id="btn-analyze-audio">
                     {loading ? 'Analyzing...' : 'Analyze for Deepfake'}
                   </button>
@@ -295,10 +314,33 @@ export default function AudioDetector() {
                     <h4 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <AlertTriangle size={18} style={{ color: 'var(--color-warning)' }} /> Voice Feature Analysis
                     </h4>
+                    {!hasFeatureSignal && (
+                      <div style={{ marginBottom: '12px', fontSize: '0.8rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
+                        Low feature signal from this sample. Zero values can be valid model output.
+                      </div>
+                    )}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      {features.map((f, i) => (
-                        <ConfidenceBar key={f.label} value={f.value} label={f.label} delay={i * 0.15} />
-                      ))}
+                      {features.map((f, i) =>
+                        f.normalizedValue === null ? (
+                          <div
+                            key={f.label}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '8px 10px',
+                              border: '1px solid var(--color-border)',
+                              borderRadius: 'var(--radius-sm)',
+                              background: 'var(--color-surface-2)',
+                            }}
+                          >
+                            <span style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-mono)' }}>{f.label}</span>
+                            <span className="badge badge-info">N/A</span>
+                          </div>
+                        ) : (
+                          <ConfidenceBar key={f.label} value={f.normalizedValue} label={f.label} delay={i * 0.12} />
+                        )
+                      )}
                     </div>
                   </GlowCard>
                 )}

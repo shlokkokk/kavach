@@ -91,15 +91,18 @@ export default function Education() {
 
   return (
     <PageWrapper>
-      <div className="edu-page">
-        <div className="page-header edu-header">
+      <div className="edu-page app-shell">
+        <div className="k-page-header edu-header">
+          <div>
           <h1>
             <BookOpen size={28} style={{ color: 'var(--color-warning)' }} />
             Fraud Intel Live
           </h1>
-          <p>
+          <p className="k-page-subtitle">
             Live external cyber-fraud headlines with response playbooks for Voice Shield, SIM Guard, and Job Shield.
           </p>
+          </div>
+          <span className="badge badge-warning">{validItems.length} active intel items</span>
           <div className="edu-header-actions">
             <span>Updated: {lastUpdated ? formatTime(lastUpdated) : 'Waiting for first sync'}</span>
             <button className="btn btn-ghost btn-sm" onClick={() => refresh()} type="button">

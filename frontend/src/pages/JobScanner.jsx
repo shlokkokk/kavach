@@ -89,8 +89,22 @@ export default function JobScanner() {
             Scam Triage Active
           </div>
         </div>
+        <div className="k-inline-metrics">
+          <div className="k-inline-metric">
+            <div className="k-inline-metric-label">Input channels</div>
+            <div className="k-inline-metric-value">Text + PDF</div>
+          </div>
+          <div className="k-inline-metric">
+            <div className="k-inline-metric-label">Company verification</div>
+            <div className="k-inline-metric-value">MCA-linked</div>
+          </div>
+          <div className="k-inline-metric">
+            <div className="k-inline-metric-label">Current verdict</div>
+            <div className="k-inline-metric-value">{result?.verdict || 'Awaiting scan'}</div>
+          </div>
+        </div>
 
-        <div className={result ? 'module-grid-split' : 'module-grid-single'}>
+        <div className={result ? 'module-grid-split job-split' : 'module-grid-single'}>
           {/* Input side */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <GlowCard color="danger">
@@ -145,7 +159,12 @@ export default function JobScanner() {
           {/* Results side */}
           <AnimatePresence>
             {result && (
-              <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="job-right-rail"
+                style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}
+              >
                 {/* Score */}
                 <GlowCard color={result.verdict === 'SCAM' ? 'danger' : result.verdict === 'SUSPICIOUS' ? 'warning' : 'primary'}>
                   <div style={{ textAlign: 'center', padding: '10px 0' }}>
@@ -164,8 +183,15 @@ export default function JobScanner() {
                     </h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                       {result.redFlags.map((flag, i) => (
-                        <motion.div key={i} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}
-                          style={{ padding: '12px', background: 'var(--color-danger-dim)', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--color-danger)' }}>
+                        <motion.div
+                          key={i}
+                          className="job-flag-card"
+                          initial={{ opacity: 0, x: 10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          whileHover={{ x: 4 }}
+                          transition={{ delay: i * 0.08 }}
+                          style={{ padding: '12px', background: 'var(--color-danger-dim)', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--color-danger)' }}
+                        >
                           <div style={{ fontWeight: 600, marginBottom: '4px', fontSize: '0.9rem' }}>"{flag.phrase}"</div>
                           <div style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)' }}>{flag.reason}</div>
                           <span className="badge badge-danger" style={{ marginTop: '6px' }}>{flag.severity}</span>
