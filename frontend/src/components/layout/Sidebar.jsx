@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, AudioWaveform, Smartphone, FileSearch, BookOpen, Link2, Shield } from 'lucide-react';
+import { LayoutDashboard, AudioWaveform, Smartphone, FileSearch, BookOpen, Link2 } from 'lucide-react';
+import KavachLogo from '../shared/KavachLogo';
 import useKavachStore from '../../store/kavachStore';
 
 const navItems = [
@@ -110,11 +111,11 @@ export default function Sidebar() {
               padding: '14px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '6px',
+              gap: '10px',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Shield size={14} style={{ color: 'var(--color-primary)' }} />
-                <span style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--color-primary)', letterSpacing: '0.05em' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <KavachLogo size={20} />
+                <span style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--color-primary)', letterSpacing: '0.05em', fontWeight: 600 }}>
                   KAVACH v1.0
                 </span>
               </div>

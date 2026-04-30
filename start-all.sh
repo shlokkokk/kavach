@@ -246,11 +246,20 @@ cleanup() {
   CLEANED_UP=1
 
   log "Stopping all modules..."
+  
+  # Kill PIDs we tracked directly
   for pid in "${PIDS[@]:-}"; do
     if kill -0 "$pid" >/dev/null 2>&1; then
       kill "$pid" >/dev/null 2>&1 || true
     fi
   done
+
+  # On Windows, direct PID killing often misses children started via PowerShell/NPM.
+  # We force-kill anything still listening on our project ports.
+  kill_port_listener_windows "$AUDIO_PORT"
+  kill_port_listener_windows "$BACKEND_PORT"
+  kill_port_listener_windows "$FRONTEND_PORT"
+
   wait || true
   log "All modules stopped."
 }
@@ -319,7 +328,7 @@ kill_port_listener_windows() {
       \$proc = Get-CimInstance Win32_Process -Filter \"ProcessId=\$pid\" -ErrorAction SilentlyContinue
       if (\$null -eq \$proc) { continue }
       \$cmd = \$proc.CommandLine
-      if (\$cmd -match 'kavach-backend|hackbaroda-2026|node --watch src/index.js|src/index.js') {
+      if (\$cmd -match 'kavach|hackbaroda|node|python|npm|vite') {
         Stop-Process -Id \$pid -Force -ErrorAction SilentlyContinue
         Write-Host \"killed:\$pid\"
       }
@@ -327,9 +336,11 @@ kill_port_listener_windows() {
   " "$port" >/dev/null 2>&1
 }
 
-ensure_backend_port_free() {
+ensure_port_free() {
   local port="$1"
+  local label="$2"
 
+  log "Validating port $port ($label)..."
   if kill_port_listener_windows "$port"; then
     sleep 1
   fi
@@ -348,7 +359,7 @@ except OSError:
     sys.exit(1)
 PY
   then
-    log "WARNING: Port $port was still busy after cleanup; backend may still fail if another process owns it."
+    log "WARNING: Port $port was still busy after cleanup; $label may still fail."
   fi
 }
 
@@ -461,9 +472,9 @@ require_cmd npm "Install Node.js first."
 PYTHON_BIN="$(detect_python)"
 configure_npm_runner
 
-assert_port_free "$AUDIO_PORT" "Audio Service"
-ensure_backend_port_free "$BACKEND_PORT"
-assert_port_free "$FRONTEND_PORT" "Frontend UI"
+ensure_port_free "$AUDIO_PORT" "Audio Service"
+ensure_port_free "$BACKEND_PORT" "Backend"
+ensure_port_free "$FRONTEND_PORT" "Frontend UI"
 
 if [[ ! -f "$BACKEND_DIR/.env" && -f "$BACKEND_DIR/.env.example" ]]; then
   cp "$BACKEND_DIR/.env.example" "$BACKEND_DIR/.env"
