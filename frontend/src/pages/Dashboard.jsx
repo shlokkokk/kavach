@@ -26,13 +26,19 @@ export default function Dashboard() {
   
   return (
     <PageWrapper>
-      <div style={{ maxWidth: '1400px' }}>
-        <div className="page-header">
-          <h1><Shield size={28} style={{ color: 'var(--color-primary)' }} /> Command Center</h1>
-          <p>Real-time overview of all KAVACH protection modules</p>
+      <div className="app-shell">
+        <div className="k-page-header">
+          <div>
+            <h1 className="k-page-title"><Shield size={28} style={{ color: 'var(--color-primary)' }} /> Command Center</h1>
+            <p className="k-page-subtitle">Real-time control surface across Voice Shield, SIM Guard, and Job Shield with synchronized fraud telemetry.</p>
+          </div>
+          <div className="badge badge-info">
+            <PulsingDot status="active" size="sm" />
+            Security Fabric Online
+          </div>
         </div>
         
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid-4" style={{ marginBottom: '28px' }}>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="k-kpi-grid">
           {statCards.map((s, i) => (
             <motion.div key={s.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
               <GlowCard>
@@ -52,10 +58,11 @@ export default function Dashboard() {
           ))}
         </motion.div>
         
-        <h3 style={{ fontSize: '1.1rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <h3 style={{ fontSize: '1.1rem', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ color: 'var(--color-primary)' }}>●</span> Protection Modules
         </h3>
-        <div className="grid-3" style={{ marginBottom: '28px' }}>
+        <p style={{ color: 'var(--color-text-secondary)', marginBottom: '14px', fontSize: '0.9rem' }}>Aligned module cards with live status indicators and direct launch routing.</p>
+        <div className="k-module-grid">
           {moduleCards.map((mod, i) => (
             <motion.div key={mod.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.1 }}>
               <Link to={mod.path} style={{ textDecoration: 'none' }}>
@@ -82,7 +89,7 @@ export default function Dashboard() {
         </div>
         
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
-          <h3 style={{ fontSize: '1.1rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h3 style={{ fontSize: '1.1rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Clock size={18} style={{ color: 'var(--color-primary)' }} /> Recent Scan Activity
           </h3>
           <GlowCard>

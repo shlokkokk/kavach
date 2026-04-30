@@ -26,6 +26,7 @@ export default function Sidebar() {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: -280, opacity: 0 }}
           transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          className="k-sidebar-shell"
           style={{
             position: 'fixed',
             top: 'var(--navbar-height)',

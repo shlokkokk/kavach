@@ -13,7 +13,7 @@ export default function Navbar() {
   
   return (
     <motion.nav
-      className="glass-strong"
+      className="glass-strong k-main-nav"
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
@@ -60,7 +60,7 @@ export default function Navbar() {
       </div>
       
       {/* Right section */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         {!isLanding && (
           <>
             {/* Live threat counter */}
@@ -73,7 +73,7 @@ export default function Navbar() {
                 gap: '8px',
                 padding: '6px 14px',
                 borderRadius: 'var(--radius-md)',
-                background: 'var(--color-surface-2)',
+                background: 'linear-gradient(180deg, rgba(17, 34, 56, 0.9), rgba(11, 24, 41, 0.95))',
                 border: '1px solid var(--color-border)',
                 fontFamily: 'var(--font-mono)',
                 fontSize: '0.8rem',

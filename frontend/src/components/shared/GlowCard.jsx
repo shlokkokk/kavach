@@ -14,16 +14,16 @@ export default function GlowCard({ children, color = 'primary', hover = true, on
   return (
     <motion.div
       whileHover={hover ? { 
-        y: -4, 
+        y: -3, 
         borderColor: c.border,
-        boxShadow: `0 8px 32px ${c.glow}, 0 0 0 1px ${c.border}`,
+        boxShadow: `0 12px 38px ${c.glow}, 0 0 0 1px ${c.border}`,
       } : {}}
       whileTap={onClick ? { scale: 0.98 } : {}}
       onClick={onClick}
       className={className}
       id={id}
       style={{
-        background: 'var(--color-surface)',
+        background: 'linear-gradient(180deg, rgba(14, 27, 45, 0.95), rgba(10, 21, 37, 0.98))',
         border: '1px solid var(--color-border)',
         borderRadius: 'var(--radius-lg)',
         padding: '24px',
@@ -44,6 +44,15 @@ export default function GlowCard({ children, color = 'primary', hover = true, on
         background: `linear-gradient(90deg, transparent, ${c.border}, transparent)`,
         opacity: 0.5,
       }} />
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: `radial-gradient(circle at top right, ${c.glow}, transparent 42%)`,
+          pointerEvents: 'none',
+          opacity: 0.75,
+        }}
+      />
       {children}
     </motion.div>
   );

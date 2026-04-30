@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AudioWaveform, Upload, Mic, MicOff, Play, Square, FileAudio, AlertTriangle, CheckCircle } from 'lucide-react';
+import { AudioWaveform, Upload, Mic, Square, FileAudio, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import GlowCard from '../components/shared/GlowCard';
 import ScoreGauge from '../components/shared/ScoreGauge';
@@ -26,6 +26,13 @@ export default function AudioDetector() {
   const animRef = useRef(null);
   const { addScan } = useKavachStore();
 
+  useEffect(() => {
+    return () => {
+      if (audioUrl) URL.revokeObjectURL(audioUrl);
+      cancelAnimationFrame(animRef.current);
+    };
+  }, [audioUrl]);
+
   const onDrop = useCallback((accepted) => {
     if (accepted.length > 0) {
       const f = accepted[0];
@@ -38,6 +45,14 @@ export default function AudioDetector() {
       setResult(null);
     }
   }, []);
+
+  const resetAudioSelection = () => {
+    if (audioUrl) URL.revokeObjectURL(audioUrl);
+    setFile(null);
+    setAudioUrl(null);
+    setResult(null);
+    toast.success('Ready for a fresh recording or upload');
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -163,13 +178,19 @@ export default function AudioDetector() {
 
   return (
     <PageWrapper>
-      <div style={{ maxWidth: '1200px' }}>
-        <div className="page-header">
-          <h1><AudioWaveform size={28} style={{ color: '#3b82f6' }} /> Voice Shield</h1>
-          <p>Upload or record audio to detect AI-generated deepfake voices</p>
+      <div className="app-shell">
+        <div className="k-page-header">
+          <div>
+            <h1 className="k-page-title"><AudioWaveform size={28} style={{ color: '#3b82f6' }} /> Voice Shield</h1>
+            <p className="k-page-subtitle">Forensic audio deepfake detection with visual waveform intelligence and live AI confidence scoring.</p>
+          </div>
+          <div className="badge badge-info">
+            <Mic size={12} />
+            Real-time Audio Lab
+          </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: result ? '1fr 1fr' : '1fr', gap: '24px' }}>
+        <div className="k-audio-layout" style={!result ? { gridTemplateColumns: '1fr' } : {}}>
           {/* Left: Input */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* Upload Zone */}
@@ -184,11 +205,20 @@ export default function AudioDetector() {
 
             {/* Record */}
             <GlowCard color="info">
-              <h4 style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Mic size={18} style={{ color: '#3b82f6' }} /> Record Audio
-              </h4>
-              <canvas ref={canvasRef} width={500} height={80} style={{ width: '100%', height: '80px', borderRadius: 'var(--radius-md)', background: 'var(--color-surface-2)', marginBottom: '12px' }} />
-              <div style={{ display: 'flex', gap: '12px' }}>
+              <div className="k-panel-head">
+                <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Mic size={18} style={{ color: '#3b82f6' }} /> Record Audio
+                </h4>
+                {file && (
+                  <button className="btn btn-ghost btn-sm" onClick={resetAudioSelection} type="button">
+                    Record New Audio
+                  </button>
+                )}
+              </div>
+              <div className="k-audio-wave-shell">
+                <canvas ref={canvasRef} width={500} height={90} style={{ width: '100%', height: '90px', borderRadius: 'var(--radius-md)', background: 'rgba(6, 14, 26, 0.82)', marginBottom: '8px' }} />
+              </div>
+              <div className="k-audio-actions" style={{ marginTop: '10px' }}>
                 {!recording ? (
                   <button className="btn btn-outline btn-sm" onClick={startRecording} id="btn-start-record">
                     <Mic size={16} /> Start Recording
@@ -198,6 +228,25 @@ export default function AudioDetector() {
                     <Square size={16} /> Stop Recording
                   </button>
                 )}
+                {!!file && (
+                  <button className="btn btn-ghost btn-sm" onClick={resetAudioSelection} type="button">
+                    Replace Current Audio
+                  </button>
+                )}
+              </div>
+              <div className="k-inline-metrics" style={{ marginTop: '12px' }}>
+                <div className="k-inline-metric">
+                  <div className="k-inline-metric-label">Input Mode</div>
+                  <div className="k-inline-metric-value">{recording ? 'Recording' : file ? 'Loaded' : 'Standby'}</div>
+                </div>
+                <div className="k-inline-metric">
+                  <div className="k-inline-metric-label">Audio Source</div>
+                  <div className="k-inline-metric-value">{file?.type?.includes('audio') ? 'Valid' : 'Waiting'}</div>
+                </div>
+                <div className="k-inline-metric">
+                  <div className="k-inline-metric-label">Threat Engine</div>
+                  <div className="k-inline-metric-value">Online</div>
+                </div>
               </div>
             </GlowCard>
 

@@ -78,10 +78,16 @@ export default function JobScanner() {
 
   return (
     <PageWrapper>
-      <div style={{ maxWidth: '1200px' }}>
-        <div className="page-header">
-          <h1><FileSearch size={28} style={{ color: '#ef4444' }} /> Job Shield</h1>
-          <p>Scan job offers and messages for fraud using AI-powered analysis</p>
+      <div className="app-shell">
+        <div className="k-page-header">
+          <div>
+            <h1 className="k-page-title"><FileSearch size={28} style={{ color: '#ef4444' }} /> Job Shield</h1>
+            <p className="k-page-subtitle">Multi-source job fraud forensics for text and PDF offers with red-flag explainability.</p>
+          </div>
+          <div className="badge badge-danger">
+            <ShieldAlert size={12} />
+            Scam Triage Active
+          </div>
         </div>
 
         <div className={result ? 'module-grid-split' : 'module-grid-single'}>
