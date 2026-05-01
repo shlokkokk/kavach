@@ -10,11 +10,61 @@ from urllib.request import Request, urlopen
 
 SHORTENER_DOMAINS = {
     "bit.ly", "tinyurl.com", "t.co", "goo.gl", "ow.ly", "is.gd", "buff.ly",
-    "cutt.ly", "shorturl.at", "rb.gy", "rebrand.ly", "tiny.cc"
+    "cutt.ly", "shorturl.at", "rb.gy", "rebrand.ly", "tiny.cc", "t.ly", "snip.ly",
+    "rebrandly.com", "v.gd", "tiny.one", "short.io", "bit.do", "bl.ink", "lnky.in"
 }
-SUSPICIOUS_TLDS = {"zip", "xyz", "top", "click", "work", "party", "gq", "tk", "ml", "cf", "ga", "icu"}
+SUSPICIOUS_TLDS = {
+    "zip", "xyz", "top", "click", "work", "party", "gq", "tk", "ml", "cf", "ga", "icu",
+    "monster", "quest", "stream", "cam", "bid", "gdn", "review", "trade", "date", "loan",
+    "win", "racing", "download", "fun", "site", "online", "live"
+}
+TRUSTED_DOMAINS = {
+    # Messaging & Social
+    "wa.me": "WhatsApp",
+    "whatsapp.com": "WhatsApp",
+    "t.me": "Telegram",
+    "telegram.org": "Telegram",
+    "fb.me": "Facebook",
+    "facebook.com": "Facebook",
+    "linkedin.com": "LinkedIn",
+    "twitter.com": "Twitter/X",
+    "x.com": "Twitter/X",
+    "instagram.com": "Instagram",
+    "youtube.com": "YouTube",
+    "discord.com": "Discord",
+    "discord.gg": "Discord",
+    
+    # Professional & Jobs
+    "indeed.com": "Indeed",
+    "glassdoor.com": "Glassdoor",
+    "naukri.com": "Naukri",
+    "monster.com": "Monster Jobs",
+    "hirist.com": "Hirist",
+    "internshala.com": "Internshala",
+    
+    # Tech & Tools
+    "google.com": "Google",
+    "microsoft.com": "Microsoft",
+    "microsoftonline.com": "Microsoft",
+    "sharepoint.com": "Microsoft SharePoint",
+    "zoom.us": "Zoom",
+    "slack.com": "Slack",
+    "github.com": "GitHub",
+    "gitlab.com": "GitLab",
+    "dropbox.com": "Dropbox",
+    "adobe.com": "Adobe",
+    
+    # Government & Official (India)
+    "gov.in": "Indian Government",
+    "nic.in": "NIC India",
+    "mca.gov.in": "Ministry of Corporate Affairs",
+    "uidai.gov.in": "UIDAI/Aadhaar",
+    "passportindia.gov.in": "Passport Seva",
+    "incometax.gov.in": "Income Tax Department",
+    "digitalindia.gov.in": "Digital India",
+}
 PHISHING_HINTS = re.compile(r"(login|verify|secure|bank|password|account|update|confirm|urgent)", re.IGNORECASE)
-URL_REGEX = re.compile(r"(https?://[^\s<>'\"()]+|www\.[^\s<>'\"()]+)", re.IGNORECASE)
+URL_REGEX = re.compile(r"(https?://[^\s<>'\"()]+|www\.[^\s<>'\"()]+|(?:[a-z0-9-]+\.)+(?:com|org|net|me|xyz|ly|gl|co|in|tk|info|zip|top|click)/[^\s<>'\"()]*)", re.IGNORECASE)
 
 
 def safe_json_request(url: str, method="GET", headers=None, payload=None, timeout=10):
@@ -49,7 +99,12 @@ def extract_urls(text: str):
 
 def get_domain(url: str) -> str:
     try:
-        netloc = urlparse(url).netloc.lower()
+        # Ensure urlparse can handle URLs without protocols
+        temp_url = url
+        if "://" not in temp_url and not temp_url.startswith("//"):
+            temp_url = "//" + temp_url
+        
+        netloc = urlparse(temp_url).netloc.lower()
         if ":" in netloc:
             netloc = netloc.split(":")[0]
         return netloc
@@ -150,9 +205,20 @@ def heuristics_for_url(url: str):
     domain = get_domain(url)
     tld = domain.split(".")[-1] if "." in domain else ""
 
-    if parsed.scheme.lower() != "https":
-        flags.append({"type": "insecure_scheme", "detail": "URL is not HTTPS", "severity": "MEDIUM"})
-        score += 12
+    # Improved Trusted Domain Matching (handles subdomains)
+    is_trusted = False
+    trust_service = ""
+    for t_dom, t_name in TRUSTED_DOMAINS.items():
+        if domain == t_dom or domain.endswith("." + t_dom):
+            is_trusted = True
+            trust_service = t_name
+            break
+
+    # If trusted, we don't apply other risk heuristics
+    if is_trusted:
+        flags.append({"type": "trusted_domain", "detail": f"Official {trust_service} platform link", "severity": "SAFE"})
+        return {"url": url, "domain": domain, "riskScore": 0, "flags": flags}
+
     if domain in SHORTENER_DOMAINS:
         flags.append({"type": "shortener", "detail": "Known URL shortener domain", "severity": "HIGH"})
         score += 25
@@ -192,7 +258,7 @@ def enrich_with_kavach_checks(item):
     if vt:
         services["virustotal"] = vt
         malicious = int(vt.get("malicious", 0))
-        if malicious > 0:
+        if malicious >= 2:
             item["flags"].append({"type": "vt_flagged", "detail": f"Flagged by {malicious} VirusTotal engines", "severity": "HIGH" if malicious >= 3 else "MEDIUM"})
             score += min(malicious * 6, 30)
 

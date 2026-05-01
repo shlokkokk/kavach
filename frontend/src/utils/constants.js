@@ -55,7 +55,8 @@ Salary: 45,000/month. No experience required. Only 2 hours daily work.
 To confirm your slot, pay ₹500 registration fee via GPay to 9876543210.
 Complete onboarding now: http://bit.ly/offer-now
 Salary portal verification: https://secure-login-check.xyz/payroll
-WhatsApp us immediately: wa.me/919876543210
+Official WhatsApp Support: wa.me/919876543210
+Claim your joining bonus: http://bonus-reliance-digital.top/claim
 Limited seats! Apply fast. Interview waived for selected candidates.
 HR Manager: Priya Sharma | hr.reliancedigitalworks@gmail.com`;
 

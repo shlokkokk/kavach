@@ -17,17 +17,18 @@ Analyze the given job offer message or document text and return ONLY a valid JSO
   "redFlags": [
     {
       "phrase": "<exact suspicious phrase from text>",
-      "reason": "<why this is suspicious>",
+      "reason": "<rich, detailed, and professional description (10-15 words) explaining the specific forensic risk of this phrase>",
       "severity": "<HIGH|MEDIUM|LOW>"
     }
   ],
   "greenFlags": ["<any legitimacy signals>"],
-  "explanation": "<2-3 sentence plain English explanation of verdict>",
-  "recommendedAction": "<what user should do>"
+  "explanation": "<2-3 sentence high-fidelity plain English explanation of verdict>",
+  "recommendedAction": "<specific, actionable steps for the user to stay safe>"
 }
 
 Common Indian job scam indicators: upfront fees, no interview, guaranteed salary (40k-2L/month), WhatsApp-only contact, Gmail/Yahoo company emails, urgency pressure, typos in company name, promises of work-from-home with no experience required, asking for Aadhaar/bank details early.
 
+CRITICAL: Do not provide short, 3-word reasons. Ensure every Red Flag has a comprehensive, expert-level forensic explanation.
 Return ONLY the JSON. No preamble. No markdown. No backticks.`;
 
   if (!API_KEY || API_KEY === 'gsk_your_key_here') {
@@ -104,18 +105,18 @@ function generateFallbackAnalysis(text) {
   const redFlags = [];
 
   const patterns = [
-    { regex: /(?:pay|send|transfer|deposit)\s*(?:₹|rs\.?|inr)?\s*\d+/i, phrase: null, reason: 'Asks for payment from candidate', severity: 'HIGH', weight: 25 },
-    { regex: /no\s+(?:experience|interview)\s+(?:required|needed)/i, phrase: null, reason: 'No experience/interview claim is suspicious', severity: 'HIGH', weight: 20 },
-    { regex: /(?:₹|rs\.?)\s*\d{2,3},?\d{3}\s*(?:\/\s*month|per\s*month|monthly)/i, phrase: null, reason: 'Unrealistic salary promise', severity: 'HIGH', weight: 15 },
-    { regex: /registration\s+fee/i, phrase: null, reason: 'Legitimate companies never charge registration fees', severity: 'HIGH', weight: 25 },
-    { regex: /whatsapp\s*(?:us|me|now|immediately)/i, phrase: null, reason: 'WhatsApp-only contact is a red flag', severity: 'MEDIUM', weight: 10 },
-    { regex: /limited\s+(?:seats?|slots?|vacancy)/i, phrase: null, reason: 'Artificial urgency/scarcity tactic', severity: 'MEDIUM', weight: 10 },
-    { regex: /(?:gmail|yahoo|hotmail)\.com/i, phrase: null, reason: 'Company using free email service', severity: 'MEDIUM', weight: 10 },
-    { regex: /work\s*from\s*home/i, phrase: null, reason: 'WFH with no experience is common scam bait', severity: 'LOW', weight: 5 },
-    { regex: /congratulations/i, phrase: null, reason: 'Unsolicited congratulations is a phishing pattern', severity: 'MEDIUM', weight: 10 },
-    { regex: /interview\s+waived/i, phrase: null, reason: 'No legitimate company waives interviews', severity: 'HIGH', weight: 15 },
-    { regex: /(?:gpay|phonepe|paytm|upi)\s*(?:to|@)/i, phrase: null, reason: 'Requesting UPI payment suggests scam', severity: 'HIGH', weight: 20 },
-    { regex: /selected\s+(?:for|as)/i, phrase: null, reason: 'Pre-selection without interview is suspicious', severity: 'MEDIUM', weight: 10 },
+    { regex: /(?:pay|send|transfer|deposit)\s*(?:₹|rs\.?|inr)?\s*\d+/i, phrase: null, reason: 'Requesting upfront payment for registration or tools is a definitive signature of recruitment fraud.', severity: 'HIGH', weight: 25 },
+    { regex: /no\s+(?:experience|interview)\s+(?:required|needed)/i, phrase: null, reason: 'Claims of high-paying roles requiring zero experience or formal interviews are used to lure victims into scams.', severity: 'HIGH', weight: 20 },
+    { regex: /(?:₹|rs\.?)\s*\d{2,3},?\d{3}\s*(?:\/\s*month|per\s*month|monthly)/i, phrase: null, reason: 'Unrealistic salary promises for entry-level work are designed to bypass critical thinking and exploit financial need.', severity: 'HIGH', weight: 15 },
+    { regex: /registration\s+fee/i, phrase: null, reason: 'Legitimate employers never charge candidates for onboarding, training, or mandatory registration fees.', severity: 'HIGH', weight: 25 },
+    { regex: /whatsapp\s*(?:us|me|now|immediately)/i, phrase: null, reason: 'Directing candidates exclusively to WhatsApp instead of official HR portals is a tactic used to avoid corporate monitoring.', severity: 'MEDIUM', weight: 10 },
+    { regex: /limited\s+(?:seats?|slots?|vacancy)/i, phrase: null, reason: 'Artificial urgency and scarcity tactics are employed to pressure victims into making impulsive financial decisions.', severity: 'MEDIUM', weight: 10 },
+    { regex: /(?:gmail|yahoo|hotmail)\.com/i, phrase: null, reason: 'The use of free, public email services instead of verified corporate domains is highly suspicious for any major firm.', severity: 'MEDIUM', weight: 10 },
+    { regex: /work\s*from\s*home/i, phrase: null, reason: 'Generic WFH offers with no specific skill requirements are frequently used as bait for sophisticated task-based scams.', severity: 'LOW', weight: 5 },
+    { regex: /congratulations/i, phrase: null, reason: 'Unsolicited congratulatory messages for roles not applied for are a hallmark of phishing and data harvesting operations.', severity: 'MEDIUM', weight: 10 },
+    { regex: /interview\s+waived/i, phrase: null, reason: 'Waiving the interview process is an extreme red flag; legitimate organizations always conduct thorough competency assessments.', severity: 'HIGH', weight: 15 },
+    { regex: /(?:gpay|phonepe|paytm|upi)\s*(?:to|@)/i, phrase: null, reason: 'Requests for payments via consumer UPI apps like GPay suggest an untraceable and non-corporate transaction.', severity: 'HIGH', weight: 20 },
+    { regex: /selected\s+(?:for|as)/i, phrase: null, reason: 'Notifying a candidate of their selection without a formal interview or application is a classic "advance-fee" scam pattern.', severity: 'MEDIUM', weight: 10 },
   ];
 
   patterns.forEach(p => {

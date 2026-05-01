@@ -1,7 +1,7 @@
 const path = require('path');
 const { spawn } = require('child_process');
 
-const URL_REGEX = /(https?:\/\/[^\s<>'"()]+|www\.[^\s<>'"()]+)/gi;
+const URL_REGEX = /(https?:\/\/[^\s<>'"()]+|www\.[^\s<>'"()]+|(?:[a-z0-9-]+\.)+(?:com|org|net|me|xyz|ly|gl|co|in|tk|info|zip|top|click)\/[^\s<>'"()]*)/gi;
 
 function extractUrls(text = '') {
   const raw = text.match(URL_REGEX) || [];
