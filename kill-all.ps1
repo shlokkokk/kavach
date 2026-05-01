@@ -2,7 +2,7 @@
 # How to run: Open PowerShell and type: .\kill-all.ps1
 
 Write-Host "--- KAVACH PORT KILLER ---" -ForegroundColor Red
-$Ports = @(4000, 8000, 5287)
+$Ports = @(4000, 8000, 5173)
 
 foreach ($Port in $Ports) {
     Write-Host "Checking port $Port..." -NoNewline
