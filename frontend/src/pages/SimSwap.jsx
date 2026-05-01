@@ -1,78 +1,268 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Smartphone, RefreshCw, Terminal, ChevronDown, ChevronUp,
-  Activity, ShieldAlert, Globe, ArrowRight, Server, HardDrive, Link, Radio
+import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  Activity,
+  AlertTriangle,
+  ArrowRight,
+  ChevronDown,
+  Clock3,
+  Cpu,
+  Globe,
+  HardDrive,
+  Link,
+  Lock,
+  MapPin,
+  Radio,
+  RefreshCw,
+  ScanSearch,
+  Server,
+  ShieldAlert,
+  ShieldCheck,
+  Signal,
+  Smartphone,
+  Terminal,
+  Zap,
 } from 'lucide-react';
+import { io } from 'socket.io-client';
+import toast from 'react-hot-toast';
+import PageWrapper from '../components/layout/PageWrapper';
 import ScoreGauge from '../components/shared/ScoreGauge';
 import ThreatScoreBadge from '../components/shared/ThreatScoreBadge';
-import PageWrapper from '../components/layout/PageWrapper';
-import useKavachStore from '../store/kavachStore';
 import { simService } from '../services/moduleServices';
-import { io } from 'socket.io-client';
+import useKavachStore from '../store/kavachStore';
 import { SOCKET_URL } from '../utils/constants';
-import toast from 'react-hot-toast';
+
+const COUNTRY_OPTIONS = [
+  { code: '91', iso: 'IN', name: 'India', minLength: 10, maxLength: 10, sample: '9876543210' },
+  { code: '1', iso: 'US', name: 'United States / Canada', minLength: 10, maxLength: 10, sample: '4155550123' },
+  { code: '44', iso: 'UK', name: 'United Kingdom', minLength: 10, maxLength: 10, sample: '7700900123' },
+  { code: '61', iso: 'AU', name: 'Australia', minLength: 9, maxLength: 9, sample: '412345678' },
+  { code: '27', iso: 'ZA', name: 'South Africa', minLength: 9, maxLength: 9, sample: '821234567' },
+  { code: '234', iso: 'NG', name: 'Nigeria', minLength: 10, maxLength: 10, sample: '8123456789' },
+];
+
+const ANOMALY_ACTIONS = [
+  { id: 'SIM_SWAP', label: 'Inject SIM Swap' },
+  { id: 'DEVICE_CHANGE', label: 'Inject Device Change' },
+  { id: 'LOCATION_JUMP', label: 'Inject Location Jump' },
+  { id: 'OTP_FLOOD', label: 'Trigger OTP Flood' },
+];
+
+function getRiskLevel(score) {
+  if (score >= 75) return 'HIGH';
+  if (score >= 40) return 'MEDIUM';
+  return 'LOW';
+}
+
+function getSeverityColor(severity) {
+  if (severity === 'CRITICAL' || severity === 'HIGH') return '#ff5a6b';
+  if (severity === 'MEDIUM') return '#ffb800';
+  return '#19d38a';
+}
+
+function formatEventType(type) {
+  return String(type || 'UNKNOWN').replace(/_/g, ' ');
+}
+
+function formatDateTime(value) {
+  if (!value) return 'Waiting for sync';
+
+  try {
+    return new Date(value).toLocaleString();
+  } catch {
+    return 'Waiting for sync';
+  }
+}
+
+function formatTime(value) {
+  if (!value) return 'Waiting';
+
+  try {
+    return new Date(value).toLocaleTimeString();
+  } catch {
+    return 'Waiting';
+  }
+}
+
+function formatPhone(phone) {
+  if (!phone) return 'Not connected';
+  const clean = String(phone).replace(/\s+/g, '');
+  if (clean.startsWith('+')) return clean;
+  return `+${clean}`;
+}
+
+function safeValue(value, fallback = 'Not available') {
+  if (value === 0) return '0';
+  return value ? String(value) : fallback;
+}
+
+function OverviewCard({ icon: Icon, label, value, meta, tone = 'neutral' }) {
+  return (
+    <div className={`simswap-overview-card simswap-tone-${tone}`}>
+      <div className="simswap-overview-top">
+        <span>{label}</span>
+        <Icon size={16} />
+      </div>
+      <strong>{value}</strong>
+      <p>{meta}</p>
+    </div>
+  );
+}
+
+function DataPoint({ label, value, mono = false, accent = false }) {
+  return (
+    <div className="simswap-data-point">
+      <span>{label}</span>
+      <strong className={mono ? 'mono' : ''} data-accent={accent ? 'true' : 'false'}>
+        {value}
+      </strong>
+    </div>
+  );
+}
 
 export default function SimSwap() {
   const [phone, setPhone] = useState('');
+  const [countryCode, setCountryCode] = useState('91');
   const [showAttackerPanel, setShowAttackerPanel] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
+  const [connectionState, setConnectionState] = useState('idle');
+  const [statusSnapshot, setStatusSnapshot] = useState(null);
   const socketRef = useRef(null);
 
+  const selectedCountry = COUNTRY_OPTIONS.find((entry) => entry.code === countryCode) || COUNTRY_OPTIONS[0];
+  const fullPhone = phone ? `+${countryCode}${phone}` : '';
+  const canRegister = phone.length >= selectedCountry.minLength && phone.length <= selectedCountry.maxLength;
+
   const {
-    simRegistered, simPhoneNumber, simEvents, simRiskScore,
-    simAlerts, simFrozen, simCarrierData, registerSim, addSimEvent,
-    addSimAlert, setSimRiskScore, setSimCarrierData, freezeTransactions, 
-    resetSim, addScan
+    simRegistered,
+    simPhoneNumber,
+    simEvents,
+    simRiskScore,
+    simAlerts,
+    simFrozen,
+    simCarrierData,
+    registerSim,
+    addSimEvent,
+    addSimAlert,
+    hydrateSimState,
+    setSimRiskScore,
+    setSimCarrierData,
+    freezeTransactions,
+    resetSim,
+    addScan,
   } = useKavachStore();
 
-  useEffect(() => {
-    return () => {
-      if (socketRef.current) socketRef.current.disconnect();
-    };
-  }, []);
+  const carrierData = simCarrierData || statusSnapshot?.carrierData || null;
+  const activePhone = simPhoneNumber || fullPhone;
+  const riskScore = statusSnapshot?.riskScore ?? simRiskScore ?? 5;
+  const riskLevel = getRiskLevel(riskScore);
+  const eventFeed = simEvents.length ? simEvents : statusSnapshot?.events || [];
+  const lastAlert = simAlerts[0] || statusSnapshot?.alerts?.[0] || null;
+  const overallStatus = simFrozen || statusSnapshot?.isFrozen ? 'FROZEN' : riskLevel === 'HIGH' ? 'Suspicious' : 'Secure';
+  const nodeLabel = carrierData ? (carrierData.isMock ? 'Session node' : 'Carrier node') : connectionState === 'live' ? 'Socket live' : 'Standby';
 
-  const connectSocket = (phoneNum) => {
+  const applyStatusSnapshot = (snapshot) => {
+    if (!snapshot) {
+      return;
+    }
+
+    setStatusSnapshot(snapshot);
+    hydrateSimState(snapshot);
+  };
+
+  const refreshStatus = async (phoneNumber = simPhoneNumber) => {
+    if (!phoneNumber) {
+      return;
+    }
+
+    try {
+      const response = await simService.getStatus(phoneNumber);
+      applyStatusSnapshot(response.data);
+    } catch {
+      // Ignore background status refresh errors so sockets can still work.
+    }
+  };
+
+  const disconnectSocket = () => {
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+      socketRef.current = null;
+    }
+  };
+
+  const connectSocket = (phoneNumber) => {
+    disconnectSocket();
+    setConnectionState('connecting');
+
     const socket = io(SOCKET_URL, { path: '/socket.io', transports: ['websocket', 'polling'] });
     socketRef.current = socket;
 
     socket.on('connect', () => {
-      socket.emit('subscribe', { phoneNumber: phoneNum });
-      socket.emit('manual-scan'); 
+      setConnectionState('live');
+      socket.emit('subscribe', { phoneNumber });
+      socket.emit('manual-scan');
+    });
+
+    socket.on('sim-status', (snapshot) => {
+      applyStatusSnapshot(snapshot);
     });
 
     socket.on('sim-event', (event) => {
       addSimEvent(event);
-      if (event.riskScore !== undefined) setSimRiskScore(event.riskScore);
-      if (event.details) setSimCarrierData(event.details);
-      
+
+      if (event.type === 'INTEGRITY_SCAN_START') {
+        setIsScanning(true);
+      }
+
       if (event.type === 'INTEGRITY_SCAN_COMPLETE') {
         setIsScanning(false);
-        if (event.details?.isMock) {
-          toast('📡 Connected to Local Node', { 
-            icon: '🔄',
-            style: { background: '#111', color: '#f59e0b', border: '1px solid #f59e0b' }
-          });
-        } else if (event.details?.valid) {
-          toast.success(`Connected: ${event.details.carrier}`, {
-            style: { background: '#064e3b', color: '#10b981', border: '1px solid #10b981' }
-          });
-        }
+      }
+
+      if (event.riskScore !== undefined) {
+        setSimRiskScore(event.riskScore);
+      }
+
+      if (event.details) {
+        setSimCarrierData(event.details);
+      }
+
+      setStatusSnapshot((current) => ({
+        ...(current || {}),
+        phoneNumber,
+        riskScore: event.riskScore ?? current?.riskScore ?? riskScore,
+        carrierData: event.details || current?.carrierData || null,
+        lastScanAt: event.type === 'INTEGRITY_SCAN_COMPLETE' ? event.timestamp : current?.lastScanAt,
+        triggeredRules: event.triggeredRules || current?.triggeredRules || [],
+        updatedAt: event.timestamp || current?.updatedAt,
+        events: [event, ...(current?.events || []).filter((item) => item.id !== event.id)].slice(0, 100),
+      }));
+
+      if (event.type === 'INTEGRITY_SCAN_COMPLETE') {
+        const provider = event.details?.provider_display || 'Live provider';
+        const carrier = event.details?.carrier || event.details?.session_isp || 'Unknown carrier';
+        toast.success(`${provider} linked: ${carrier}`, {
+          style: { background: '#052e24', color: '#bdf7df', border: '1px solid #0f8f65' },
+        });
       }
     });
 
     socket.on('threat-alert', (alert) => {
       addSimAlert(alert);
-      toast.error(`🚨 ${alert.message || 'SIM SWAP DETECTED'}`, { 
+      setStatusSnapshot((current) => ({
+        ...(current || {}),
+        alerts: [alert, ...(current?.alerts || []).filter((item) => item.id !== alert.id)],
+      }));
+      toast.error(alert.message || 'SIM swap threat detected', {
         duration: 8000,
-        style: { background: '#7f1d1d', color: '#fff', border: '1px solid #ef4444', fontWeight: 800 }
+        style: { background: '#4b1118', color: '#ffe1e4', border: '1px solid #ff5a6b', fontWeight: 700 },
       });
+
       addScan({
-        id: Date.now().toString(), 
-        module: 'SIM Guard', 
+        id: Date.now().toString(),
+        module: 'SIM Guard',
         moduleColor: '#f59e0b',
-        input: phoneNum, 
-        threatLevel: 'HIGH', 
+        input: phoneNumber,
+        threatLevel: 'HIGH',
         score: alert.riskScore || 94,
         time: new Date().toLocaleTimeString(),
       });
@@ -80,273 +270,571 @@ export default function SimSwap() {
 
     socket.on('bank-frozen', () => {
       freezeTransactions();
-      toast.success('🔒 Assets Shielded', { icon: '🛡️' });
+      setStatusSnapshot((current) => ({ ...(current || {}), isFrozen: true, status: 'FROZEN' }));
+      toast.success('Assets shielded', {
+        style: { background: '#062b1e', color: '#b5f5cf', border: '1px solid #19d38a' },
+      });
+    });
+
+    socket.on('disconnect', () => {
+      setConnectionState('offline');
+      setIsScanning(false);
     });
 
     socket.on('connect_error', () => {
-      toast.error('Network Bridge Interrupted');
+      setConnectionState('offline');
+      setIsScanning(false);
+      toast.error('Backend connection failed');
     });
   };
 
+  useEffect(() => {
+    return () => {
+      disconnectSocket();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!simRegistered || !simPhoneNumber || socketRef.current) {
+      return;
+    }
+
+    connectSocket(simPhoneNumber);
+    refreshStatus(simPhoneNumber);
+  }, [simPhoneNumber, simRegistered]);
+
   const handleRegister = async () => {
-    if (!phone || phone.length < 10) { toast.error('Enter valid phone number'); return; }
+    if (!canRegister) {
+      toast.error(`Enter a valid ${selectedCountry.name} number`);
+      return;
+    }
+
     try {
-      await simService.register(phone);
-    } catch { /* continue */ }
-    registerSim(phone);
-    connectSocket(phone);
+      const response = await simService.register(fullPhone);
+      registerSim(fullPhone);
+      applyStatusSnapshot(response.data?.status);
+      connectSocket(fullPhone);
+    } catch (error) {
+      toast.error(error.message || 'Unable to start monitoring');
+    }
   };
 
   const handleStartDemo = () => {
-    if (!socketRef.current?.connected) { toast.error('Connection Lost'); return; }
+    if (!socketRef.current?.connected) {
+      toast.error('Connection lost');
+      return;
+    }
+
     socketRef.current.emit('start-demo');
-    toast('🎬 Simulating Attack...', { icon: '🔥' });
+    toast('Auto attack sequence started', {
+      style: { background: '#261701', color: '#ffcf79', border: '1px solid #f59e0b' },
+    });
   };
 
   const handleTriggerAnomaly = (type) => {
-    if (!socketRef.current?.connected) { toast.error('Connection Lost'); return; }
+    if (!socketRef.current?.connected) {
+      toast.error('Connection lost');
+      return;
+    }
+
     socketRef.current.emit('trigger-anomaly', { type });
   };
 
   const handleManualScan = () => {
-    if (!socketRef.current?.connected) { toast.error('Connection Lost'); return; }
+    if (!socketRef.current?.connected) {
+      toast.error('Connection lost');
+      return;
+    }
+
     setIsScanning(true);
     socketRef.current.emit('manual-scan');
   };
 
   const handleFreeze = async () => {
-    try { await simService.freeze(simPhoneNumber); } catch {}
-    freezeTransactions();
+    try {
+      const response = await simService.freeze(simPhoneNumber);
+      freezeTransactions();
+      applyStatusSnapshot(response.data?.status);
+    } catch {
+      freezeTransactions();
+    }
+  };
+
+  const handleMarkSafe = async () => {
+    try {
+      const response = await simService.markSafe(simPhoneNumber);
+      applyStatusSnapshot(response.data?.status);
+      toast.success('State reset to safe');
+    } catch (error) {
+      toast.error(error.message || 'Unable to clear SIM status');
+    }
   };
 
   const handleReset = () => {
-    if (socketRef.current) socketRef.current.disconnect();
+    disconnectSocket();
     resetSim();
+    setStatusSnapshot(null);
     setIsScanning(false);
-  };
-
-  const getSeverityColor = (s) => {
-    if (s === 'HIGH' || s === 'CRITICAL') return '#ef4444';
-    if (s === 'MEDIUM') return '#f59e0b';
-    return '#10b981';
+    setConnectionState('idle');
+    setShowAttackerPanel(false);
   };
 
   return (
     <PageWrapper>
-      <div className="app-shell">
-        <div className="k-page-header k-panel" style={{ padding: '18px 20px', marginBottom: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-            <div style={{ 
-              width: '52px', height: '52px', borderRadius: '14px', 
-              background: 'linear-gradient(135deg, #f59e0b 0%, #78350f 100%)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 0 20px rgba(245, 158, 11, 0.2)'
-            }}>
-              <Smartphone size={28} color="#fff" />
+      <div className="app-shell simswap-page">
+        <div className="k-page-header k-panel simswap-hero">
+          <div className="simswap-hero-main">
+            <div className="simswap-hero-icon">
+              <Smartphone size={30} />
             </div>
-            <div>
-              <h1 className="k-page-title" style={{ margin: 0, fontSize: '1.45rem', fontWeight: 900, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                SIM GUARD 
-                <span style={{ 
-                  background: simCarrierData?.isMock ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)', 
-                  color: simCarrierData?.isMock ? '#f59e0b' : '#10b981', 
-                  fontSize: '0.65rem', padding: '3px 10px', borderRadius: '100px',
-                  border: simCarrierData?.isMock ? '1px solid rgba(245, 158, 11, 0.2)' : '1px solid rgba(16, 185, 129, 0.2)', 
-                  fontWeight: 800, display: 'flex', alignItems: 'center', gap: '5px'
-                }}>
-                  <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: simCarrierData?.isMock ? '#f59e0b' : '#10b981' }} /> 
-                  {simCarrierData?.isMock ? 'LOCAL NODE' : 'LIVE NODE'}
+            <div className="simswap-hero-copy">
+              <div className="simswap-kicker-row">
+                <span className="simswap-kicker">Telecom Identity Monitor</span>
+                <span className={`simswap-status-chip simswap-connection-${connectionState}`}>
+                  <Radio size={12} />
+                  {connectionState === 'live' ? 'Live stream' : connectionState === 'connecting' ? 'Connecting' : 'Standby'}
                 </span>
+              </div>
+              <h1 className="k-page-title">
+                SIM Guard
               </h1>
-              <p className="k-page-subtitle" style={{ margin: '4px 0 0 0', opacity: 0.85, fontSize: '0.9rem', fontWeight: 500 }}>
-                Global forensic network with real-time HLR integrity analysis and anomaly interception.
+              <p className="k-page-subtitle">
+                A cleaner live operations view for carrier lookups, fraud scoring, SIM anomalies, and backend event telemetry.
               </p>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            <span className="badge badge-warning">
-              <Activity size={12} />
-              {isScanning ? 'Scanning' : 'Monitoring'}
-            </span>
-            {simRegistered && (
-              <button className="btn btn-ghost" onClick={handleReset} style={{ borderRadius: '12px', height: '40px' }}>
-                <RefreshCw size={15} style={{ marginRight: '8px' }} /> Reset
-              </button>
-            )}
+
+          <div className="simswap-hero-meta">
+            <div className="simswap-meta-block">
+              <span>Security State</span>
+              <div className="simswap-hero-actions-integrated">
+                <span className={`simswap-status-pill simswap-risk-${riskLevel.toLowerCase()}`}>
+                  <Activity size={14} />
+                  {isScanning ? 'Scanning backend' : overallStatus}
+                </span>
+              </div>
+            </div>
+            <div className="simswap-meta-block">
+              <span>Active number</span>
+              <strong className="mono">{formatPhone(activePhone)}</strong>
+            </div>
+            <div className="simswap-meta-block">
+              <span>Data path</span>
+              <strong>{nodeLabel}</strong>
+            </div>
+            <div className="simswap-hero-actions">
+              {simRegistered && (
+                <button className="btn btn-ghost" onClick={handleReset}>
+                  <RefreshCw size={16} /> Reset
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
         {!simRegistered ? (
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} style={{ maxWidth: '640px', margin: '40px auto' }}>
-            <div className="k-panel" style={{ padding: '40px', textAlign: 'center' }}>
-              <div style={{ width: '80px', height: '80px', borderRadius: '24px', background: 'rgba(245, 158, 11, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 28px', border: '1px solid rgba(245, 158, 11, 0.1)' }}>
-                <Link size={40} style={{ color: '#f59e0b' }} />
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="simswap-onboard"
+          >
+            <div className="k-panel simswap-onboard-card">
+              <div className="simswap-onboard-intro">
+                <div className="simswap-onboard-badge">
+                  <ShieldCheck size={38} strokeWidth={1.5} />
+                </div>
+                <div>
+                  <span className="simswap-kicker">Start Live Monitoring</span>
+                  <h2>Connect a real phone number and pull carrier data from the backend.</h2>
+                  <p>
+                    This view now waits for a backend registration, socket subscription, and live integrity scan before it paints the intelligence panels.
+                  </p>
+                </div>
               </div>
-              <h2 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '14px', letterSpacing: '-0.02em' }}>Establish Forensic Link</h2>
-              <p style={{ color: 'var(--color-text-secondary)', fontSize: '1rem', marginBottom: '32px', lineHeight: 1.6 }}>
-                Initialize a real-time bridge between your device and our global carrier detection network to monitor for SIM swap vulnerabilities.
-              </p>
-              
-              <div style={{ position: 'relative', marginBottom: '20px' }}>
-                <input
-                  type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Enter Mobile Number"
-                  className="input"
-                  style={{ width: '100%', height: '62px', borderRadius: '14px', fontSize: '1.1rem', textAlign: 'center', fontWeight: 800 }}
+
+              <div className="simswap-input-grid">
+                <div className="simswap-field">
+                  <span>Country</span>
+                  <div className="simswap-input-wrapper">
+                    <select
+                      className="input simswap-select"
+                      value={countryCode}
+                      onChange={(event) => setCountryCode(event.target.value)}
+                    >
+                      {COUNTRY_OPTIONS.map((option) => (
+                        <option key={option.code} value={option.code}>
+                          {option.iso} +{option.code}
+                        </option>
+                      ))}
+                    </select>
+                    <Globe className="input-icon" size={20} />
+                    <ChevronDown className="input-chevron" size={16} />
+                  </div>
+                </div>
+
+                <div className="simswap-field">
+                  <span>Phone number</span>
+                  <div className="simswap-input-wrapper">
+                    <input
+                      type="tel"
+                      className="input simswap-phone-input"
+                      value={phone}
+                      onChange={(event) => {
+                        const clean = event.target.value.replace(/\D/g, '');
+                        setPhone(clean.slice(0, selectedCountry.maxLength));
+                      }}
+                      placeholder={selectedCountry.sample}
+                    />
+                    <Smartphone className="input-icon" size={20} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="simswap-preview-row">
+                <div className="simswap-preview-chip">
+                  <span>Formatted input</span>
+                  <strong className="mono">{fullPhone || `+${selectedCountry.code} ${selectedCountry.sample}`}</strong>
+                </div>
+                <div className="simswap-preview-chip">
+                  <span>Validation</span>
+                  <strong>
+                    {canRegister
+                      ? 'Ready for backend sync'
+                      : (selectedCountry.minLength === selectedCountry.maxLength
+                          ? `${selectedCountry.minLength} digits required`
+                          : `${selectedCountry.minLength}-${selectedCountry.maxLength} digits required`)
+                    }
+                  </strong>
+                </div>
+              </div>
+
+              <button className="btn btn-primary simswap-register-button" onClick={handleRegister} disabled={!canRegister}>
+                Authorize Monitoring <ArrowRight size={20} />
+              </button>
+            </div>
+
+            <div className="k-panel simswap-preview-card">
+              <div className="k-panel-head">
+                <div>
+                  <span className="k-panel-kicker">What will go live</span>
+                  <h3>Backend-driven SIM intelligence</h3>
+                </div>
+                <span className="simswap-status-chip simswap-connection-idle">
+                  <Server size={12} /> Awaiting connection
+                </span>
+              </div>
+
+              <div className="simswap-preview-grid">
+                <OverviewCard
+                  icon={HardDrive}
+                  label="Carrier provider"
+                  value="Veriphone / IPQS / session fallback"
+                  meta="Who answered the lookup"
+                />
+                <OverviewCard
+                  icon={ShieldCheck}
+                  label="Risk score"
+                  value="Live fraud probability"
+                  meta="Pulled from backend scan results"
+                />
+                <OverviewCard
+                  icon={Signal}
+                  label="Line intelligence"
+                  value="Carrier, type, region, confidence"
+                  meta="No more static card placeholders"
+                />
+                <OverviewCard
+                  icon={Terminal}
+                  label="Forensic stream"
+                  value="Socket events and anomalies"
+                  meta="Every scan and attack event appears here"
+                />
+                <OverviewCard
+                  icon={Radio}
+                  label="Network Integrity"
+                  value="Live HLR/VLR verification"
+                  meta="Backend socket-driven scanning"
+                />
+                <OverviewCard
+                  icon={Activity}
+                  label="Socket Telemetry"
+                  value="Bi-directional event stream"
+                  meta="Active monitoring state"
                 />
               </div>
-              <button 
-                className="btn btn-primary" 
-                style={{ 
-                  width: '100%', height: '62px', borderRadius: '14px', fontSize: '1.02rem', 
-                  fontWeight: 900, background: 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)',
-                  border: 'none', boxShadow: '0 10px 30px rgba(245, 158, 11, 0.2)'
-                }} 
-                onClick={handleRegister}
-              >
-                AUTHORIZE MONITORING <ArrowRight size={20} style={{ marginLeft: '10px' }} />
-              </button>
             </div>
           </motion.div>
         ) : (
-          <div className="sim-grid">
-            
-            {/* Sidebar Forensics */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              
-              {/* Dynamic Risk Matrix */}
-              <div className="k-panel" style={{ padding: '20px', textAlign: 'center' }}>
-                <ScoreGauge score={simRiskScore} size={180} label="THREAT PROBABILITY" />
-                <div style={{ marginTop: '16px' }}>
-                  <ThreatScoreBadge level={simRiskScore >= 75 ? 'HIGH' : simRiskScore >= 40 ? 'MEDIUM' : 'LOW'} />
+          <div className="simswap-layout">
+            <aside className="simswap-rail">
+              <div className="k-panel simswap-risk-panel">
+                <div className="k-panel-head">
+                  <div>
+                    <span className="k-panel-kicker">Threat Probability</span>
+                    <h3>Live exposure score</h3>
+                  </div>
+                  <ThreatScoreBadge level={riskLevel} />
+                </div>
+
+                <div className="simswap-gauge-wrap">
+                  <ScoreGauge score={riskScore} size={210} label="Threat Probability" />
+                </div>
+
+                <div className="simswap-risk-stats">
+                  <DataPoint label="Overall state" value={overallStatus} accent />
+                  <DataPoint label="Last sync" value={formatDateTime(statusSnapshot?.updatedAt || statusSnapshot?.lastScanAt)} />
+                  <DataPoint label="Triggered rules" value={safeValue(statusSnapshot?.triggeredRules?.length, '0')} />
                 </div>
               </div>
 
-              {/* HLR Data Node */}
-              <div className="k-panel" style={{ padding: '18px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+              <div className="k-panel simswap-action-panel">
+                <div className="k-panel-head">
+                  <div>
+                    <span className="k-panel-kicker">Controls</span>
+                    <h3>Live response actions</h3>
+                  </div>
+                  <span className="simswap-status-chip simswap-connection-live">
+                    <ScanSearch size={12} /> {isScanning ? 'Scanning' : 'Ready'}
+                  </span>
+                </div>
+
+                <div className="simswap-action-stack">
+                  <button className="btn btn-outline simswap-action-button" onClick={handleManualScan} disabled={isScanning}>
+                    <RefreshCw size={17} className={isScanning ? 'spin' : ''} />
+                    Refresh Forensics
+                  </button>
+
+                  <button className="btn btn-ghost simswap-action-button" onClick={handleMarkSafe}>
+                    <ShieldCheck size={17} />
+                    Mark Safe
+                  </button>
+
+                </div>
+              </div>
+
+              <div className="k-panel simswap-sidefacts-panel">
+                <div className="k-panel-head">
+                  <div>
+                    <span className="k-panel-kicker">Session Snapshot</span>
+                    <h3>Backend facts</h3>
+                  </div>
                   <HardDrive size={18} color="#f59e0b" />
-                  <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 800 }}>HLR DATA NODE</h4>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <div style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontWeight: 800, marginBottom: '4px' }}>CARRIER IDENTITY</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#f59e0b' }}>{simCarrierData?.carrier || 'QUERYING...'}</div>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                    <div style={{ padding: '12px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                      <div style={{ fontSize: '0.6rem', color: 'var(--color-muted)', marginBottom: '4px' }}>MCC/MNC</div>
-                      <div style={{ fontWeight: 800, fontSize: '0.9rem', fontFamily: 'var(--font-mono)' }}>{simCarrierData?.mcc || '---'}/{simCarrierData?.mnc || '---'}</div>
-                    </div>
-                    <div style={{ padding: '12px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                      <div style={{ fontSize: '0.6rem', color: 'var(--color-muted)', marginBottom: '4px' }}>LINE TYPE</div>
-                      <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>{simCarrierData?.line_type || '---'}</div>
-                    </div>
-                  </div>
-
-                  <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '0.75rem' }}>
-                      <span style={{ opacity: 0.6 }}>Last SIM Change</span>
-                      <span style={{ fontWeight: 700 }}>{simCarrierData?.last_sim_swap || '---'}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
-                      <span style={{ opacity: 0.6 }}>Reputation</span>
-                      <span style={{ color: simRiskScore >= 40 ? '#ef4444' : '#10b981', fontWeight: 900 }}>{simRiskScore >= 40 ? 'SUSPICIOUS' : 'SECURE'}</span>
-                    </div>
-                  </div>
+                <div className="simswap-sidefacts">
+                  <DataPoint label="Device ID" value={safeValue(statusSnapshot?.deviceId)} mono />
+                  <DataPoint label="Registration" value={formatDateTime(statusSnapshot?.registeredAt)} />
+                  <DataPoint label="Last scan" value={formatDateTime(statusSnapshot?.lastScanAt)} />
+                  <DataPoint label="Location model" value={safeValue(statusSnapshot?.location)} />
                 </div>
               </div>
+            </aside>
 
-              {/* Control Deck */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <button className="btn btn-outline" onClick={handleManualScan} disabled={isScanning} style={{ height: '56px', borderRadius: '18px', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
-                  <RefreshCw size={18} className={isScanning ? 'spin' : ''} style={{ marginRight: '10px' }} /> REFRESH FORENSICS
-                </button>
-                <button className="btn btn-ghost" onClick={() => setShowAttackerPanel(!showAttackerPanel)} style={{ height: '56px', borderRadius: '18px', background: 'rgba(255,255,255,0.02)' }}>
-                  <Terminal size={18} style={{ marginRight: '10px' }} /> SIMULATION LAB
-                  {showAttackerPanel ? <ChevronUp size={18} style={{ marginLeft: 'auto' }} /> : <ChevronDown size={18} style={{ marginLeft: 'auto' }} />}
-                </button>
-
-                <AnimatePresence>
-                  {showAttackerPanel && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                      style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.01)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}
-                    >
-                      <button className="btn btn-ghost btn-xs" style={{ justifyContent: 'flex-start' }} onClick={() => handleTriggerAnomaly('SIM_SWAP')}>• Inject SIM Swap</button>
-                      <button className="btn btn-ghost btn-xs" style={{ justifyContent: 'flex-start' }} onClick={() => handleTriggerAnomaly('DEVICE_CHANGE')}>• Inject Device Change</button>
-                      <button className="btn btn-ghost btn-xs" style={{ justifyContent: 'flex-start' }} onClick={() => handleTriggerAnomaly('LOCATION_JUMP')}>• Inject Location Jump</button>
-                      <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '6px 0' }} />
-                      <button className="btn btn-primary btn-sm" onClick={handleStartDemo}>RUN AUTO ATTACK</button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+            <section className="simswap-main">
+              <div className="simswap-overview-grid">
+                <OverviewCard
+                  icon={Server}
+                  label="Provider"
+                  value={safeValue(carrierData?.provider_display, 'Waiting for scan')}
+                  meta={safeValue(carrierData?.carrier_source || carrierData?.provider, 'No provider selected yet')}
+                  tone="info"
+                />
+                <OverviewCard
+                  icon={Smartphone}
+                  label="Carrier"
+                  value={safeValue(carrierData?.carrier || carrierData?.session_isp, 'Waiting for carrier data')}
+                  meta={safeValue(carrierData?.line_type, 'Line type pending')}
+                  tone={riskLevel === 'HIGH' ? 'danger' : 'neutral'}
+                />
+                <OverviewCard
+                  icon={MapPin}
+                  label="Country"
+                  value={safeValue(carrierData?.country || carrierData?.session_country, 'Waiting for region')}
+                  meta={safeValue(carrierData?.country_code, 'Country code pending')}
+                  tone="neutral"
+                />
+                <OverviewCard
+                  icon={Clock3}
+                  label="Last scan"
+                  value={formatTime(statusSnapshot?.lastScanAt)}
+                  meta={formatDateTime(statusSnapshot?.lastScanAt)}
+                  tone="success"
+                />
               </div>
-            </div>
 
-            {/* Main Log Stream */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              
-              {/* Critical Alert Area */}
               <AnimatePresence>
-                {simAlerts.length > 0 && !simFrozen && (
-                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-                    style={{ background: 'linear-gradient(135deg, #450a0a 0%, #991b1b 100%)', borderRadius: '20px', padding: '24px', border: '2px solid rgba(239, 68, 68, 0.45)', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 20px 50px rgba(220, 38, 38, 0.2)' }}
+                {lastAlert && !simFrozen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 12 }}
+                    className="simswap-alert-banner"
                   >
-                    <div style={{ width: '64px', height: '64px', borderRadius: '18px', background: 'rgba(239, 68, 68, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <ShieldAlert size={36} color="#ef4444" className="pulse-glow" />
+                    <div className="simswap-alert-icon">
+                      <ShieldAlert size={30} />
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <h3 style={{ margin: '0 0 4px 0', fontSize: '1.4rem', fontWeight: 900, color: '#fee2e2' }}>SIM SWAP VECTOR IDENTIFIED</h3>
-                      <p style={{ margin: 0, color: '#fca5a5', fontSize: '0.95rem' }}>Unauthorized hardware change detected. High-risk takeover in progress.</p>
+                    <div className="simswap-alert-copy">
+                      <span className="simswap-kicker">Critical response</span>
+                      <h3>{lastAlert.message || 'High-risk SIM takeover activity detected'}</h3>
+                      <p>Freeze downstream actions while you verify device ownership and carrier status.</p>
                     </div>
-                    <button className="btn btn-danger" onClick={handleFreeze} style={{ height: '60px', padding: '0 32px', borderRadius: '16px', fontWeight: 900 }}>SHIELD ASSETS</button>
+                    <button className="btn btn-danger" onClick={handleFreeze}>
+                      <Lock size={16} /> Shield Assets
+                    </button>
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* Log Stream Card */}
-              <div className="k-panel" style={{ padding: '22px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <Server size={20} color="#f59e0b" />
-                    <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900 }}>FORENSIC STREAM</h3>
+              <div className="k-panel simswap-stream-panel">
+                <div className="k-panel-head">
+                  <div>
+                    <span className="k-panel-kicker">Forensic Stream</span>
+                    <h3>Live backend events</h3>
                   </div>
-                  <div style={{ padding: '4px 12px', borderRadius: '100px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', fontSize: '0.7rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Radio size={12} /> LIVE
+                  <div className="simswap-panel-actions">
+                    <button className="btn btn-ghost btn-sm" onClick={() => setShowAttackerPanel((current) => !current)}>
+                      <Terminal size={14} /> Simulation Lab
+                    </button>
+                    <span className="simswap-status-chip simswap-connection-live">
+                      <Globe size={12} /> Socket feed
+                    </span>
                   </div>
                 </div>
 
-                <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', paddingRight: '8px', maxHeight: '500px' }}>
-                  {simEvents.length === 0 ? (
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: 0.2, marginTop: '60px' }}>
-                      <Globe size={52} style={{ marginBottom: '20px' }} />
-                      <p style={{ fontSize: '1rem', fontWeight: 700 }}>Awaiting Forensic Data Stream...</p>
+                <AnimatePresence>
+                  {showAttackerPanel && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="simswap-attack-lab-integrated"
+                    >
+                      <div className="simswap-lab-grid">
+                        {ANOMALY_ACTIONS.map((action) => (
+                          <button
+                            key={action.id}
+                            className="simswap-lab-chip"
+                            onClick={() => handleTriggerAnomaly(action.id)}
+                          >
+                            {action.label}
+                          </button>
+                        ))}
+                        <button className="btn btn-primary btn-sm simswap-demo-button" onClick={handleStartDemo}>
+                          Run Auto Attack Sequence
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <div className="simswap-stream-list">
+                  {eventFeed.length === 0 ? (
+                    <div className="simswap-empty-state">
+                      <Server size={44} />
+                      <h4>Waiting for backend events</h4>
+                      <p>The stream will populate after registration, socket subscribe, and integrity scan completion.</p>
                     </div>
                   ) : (
-                    simEvents.map((evt, i) => (
-                      <motion.div key={evt.id || i} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} whileHover={{ x: 3, y: -1 }}
-                        style={{ padding: '20px', borderRadius: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderLeft: `6px solid ${getSeverityColor(evt.severity)}` }}
+                    eventFeed.map((event) => (
+                      <motion.div
+                        key={event.id}
+                        initial={{ opacity: 0, x: 16 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="simswap-event-card"
+                        style={{ borderLeftColor: getSeverityColor(event.severity) }}
                       >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                          <span style={{ fontSize: '0.65rem', fontWeight: 900, color: getSeverityColor(evt.severity), background: `${getSeverityColor(evt.severity)}15`, padding: '2px 10px', borderRadius: '6px' }}>
-                            {evt.type?.replace(/_/g, ' ')}
+                        <div className="simswap-event-head">
+                          <span
+                            className="simswap-event-type"
+                            style={{
+                              color: getSeverityColor(event.severity),
+                              background: `${getSeverityColor(event.severity)}18`,
+                            }}
+                          >
+                            {formatEventType(event.type)}
                           </span>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--color-muted)' }}>{new Date(evt.timestamp).toLocaleTimeString()}</span>
+                          <span className="mono">{formatTime(event.timestamp)}</span>
                         </div>
-                        <p style={{ fontSize: '1rem', fontWeight: 600, color: '#fff', margin: '0 0 10px 0', lineHeight: 1.4 }}>{evt.description}</p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                          {evt.triggeredRules?.map(r => (
-                            <span key={r} style={{ fontSize: '0.65rem', fontWeight: 800, padding: '3px 10px', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>{r}</span>
-                          ))}
-                        </div>
+
+                        <p>{event.description}</p>
+
+                        {!!event.triggeredRules?.length && (
+                          <div className="simswap-rule-row">
+                            {event.triggeredRules.map((rule) => (
+                              <span key={`${event.id}-${rule}`} className="simswap-rule-chip">
+                                <AlertTriangle size={12} />
+                                {rule}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </motion.div>
                     ))
                   )}
                 </div>
               </div>
-            </div>
+
+              <div className="k-panel simswap-node-panel">
+                <div className="k-panel-head">
+                  <div>
+                    <span className="k-panel-kicker">HLR Data Node</span>
+                    <h3>Carrier intelligence</h3>
+                  </div>
+                  <span className={`simswap-status-pill simswap-risk-${riskLevel.toLowerCase()}`}>
+                    <Activity size={14} /> {riskLevel} risk
+                  </span>
+                </div>
+
+                <div className="simswap-node-hero">
+                  <div>
+                    <span>Provider</span>
+                    <strong>{safeValue(carrierData?.provider_display, 'Waiting for live provider')}</strong>
+                  </div>
+                  <div>
+                    <span>Confidence</span>
+                    <strong>{carrierData?.carrier_confidence !== undefined ? `${carrierData.carrier_confidence}%` : 'Pending'}</strong>
+                  </div>
+                  <div>
+                    <span>Validity</span>
+                    <strong>{carrierData?.valid === undefined ? 'Pending' : carrierData.valid ? 'Valid' : 'Invalid'}</strong>
+                  </div>
+                </div>
+
+                <div className="simswap-data-grid">
+                  <DataPoint label="E164" value={safeValue(carrierData?.e164_number, formatPhone(simPhoneNumber))} mono />
+                  <DataPoint label="Local number" value={safeValue(carrierData?.local_number, phone || 'Pending')} mono />
+                  <DataPoint label="Carrier" value={safeValue(carrierData?.carrier || carrierData?.session_isp)} accent />
+                  <DataPoint label="Line type" value={safeValue(carrierData?.line_type)} />
+                  <DataPoint label="Country" value={safeValue(carrierData?.country || carrierData?.session_country)} />
+                  <DataPoint label="Country code" value={safeValue(carrierData?.country_code)} />
+                  <DataPoint label="MCC" value={safeValue(carrierData?.mcc)} mono />
+                  <DataPoint label="MNC" value={safeValue(carrierData?.mnc)} mono />
+                  <DataPoint label="SIM changed" value={carrierData?.sim_changed ? 'Yes' : 'No'} />
+                  <DataPoint label="Last SIM swap" value={safeValue(carrierData?.last_sim_swap)} />
+                  <DataPoint label="Fraud score" value={carrierData?.fraud_score !== undefined ? `${carrierData.fraud_score}/100` : 'Pending'} accent />
+                  <DataPoint label="Note" value={safeValue(carrierData?.note, 'No provider note yet')} />
+                </div>
+
+                {carrierData?.raw && (
+                  <div className="simswap-raw-card">
+                    <div className="k-panel-head">
+                      <div>
+                        <span className="k-panel-kicker">Raw Provider Payload</span>
+                        <h3>Selected backend fields</h3>
+                      </div>
+                      <Cpu size={18} color="#6ea8ff" />
+                    </div>
+
+                    <div className="simswap-data-grid">
+                      <DataPoint label="Raw phone" value={safeValue(carrierData.raw.phone)} mono />
+                      <DataPoint label="Region" value={safeValue(carrierData.raw.phone_region)} />
+                      <DataPoint label="Prefix" value={safeValue(carrierData.raw.country_prefix ? `+${carrierData.raw.country_prefix}` : null)} mono />
+                      <DataPoint label="Phone type" value={safeValue(carrierData.raw.phone_type || carrierData.raw.line_type)} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
           </div>
         )}
       </div>

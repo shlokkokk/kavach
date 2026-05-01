@@ -1,13 +1,81 @@
 const axios = require('axios');
 
+function normalizePhone(phoneNumber) {
+  const clean = String(phoneNumber || '').replace(/\D/g, '');
+  if (!clean) return { clean: '', e164: '' };
+  if (clean.length === 10) return { clean, e164: `+91${clean}` };
+  if (clean.startsWith('91') && clean.length === 12) return { clean, e164: `+${clean}` };
+  return { clean, e164: clean.startsWith('+') ? clean : `+${clean}` };
+}
+
+async function lookupViaVeriphone(phoneNumber, apiKey) {
+  if (!apiKey) return { ok: false, code: 'VERIPHONE_KEY_MISSING', message: 'Veriphone key missing' };
+  try {
+    const { e164 } = normalizePhone(phoneNumber);
+    const resp = await axios.get('https://api.veriphone.io/v2/verify', {
+      params: { key: apiKey, phone: e164 },
+      timeout: 10000,
+    });
+    const data = resp.data || {};
+    if (data.success === false || data.status === 'error') {
+      return { ok: false, code: 'VERIPHONE_ERROR', message: data.message || 'Veriphone error', raw: data };
+    }
+
+    const valid = !!data.phone_valid; // Use Veriphone's phone_valid field
+    const fraudScore = valid ? 5 : 75;   // Low score for valid numbers, high for invalid
+    return {
+      ok: true,
+      data: {
+        valid,
+        carrier: data.carrier || 'Unknown Carrier',
+        carrier_display: data.carrier || 'Unknown Carrier',
+        line_type: data.line_type || data.type || 'Unknown',
+        mcc: data.mcc || 'N/A',
+        mnc: data.mnc || 'N/A',
+        sim_changed: false,
+        last_sim_swap: 'Unavailable via Veriphone',
+        fraud_score: fraudScore,
+        risky: fraudScore > 75,
+        isMock: false,
+        provider: 'veriphone',
+        provider_display: 'Veriphone',
+        carrier_source: 'veriphone-api',
+        carrier_confidence: valid ? 85 : 45,
+        e164_number: data.international_number || e164,
+        local_number: data.local_number || null,
+        country: data.country || null,
+        country_code: data.country_code || null,
+        note: 'Carrier metadata from Veriphone',
+        raw: data,
+      },
+    };
+  } catch (error) {
+    return { ok: false, code: 'VERIPHONE_NETWORK_ERROR', message: error.message, raw: error.response?.data || null };
+  }
+}
+
 /**
- * Perform a real phone lookup via IPQualityScore
- * Includes a fallback to a live session-network lookup if API is blocked/out of credits
+ * Perform phone lookup: Veriphone (primary) > IPQS (fallback) > session-network (final fallback)
  */
 async function lookupPhone(phoneNumber, apiKey, options = {}) {
+  // Try Veriphone first (primary provider)
+  const veriphoneKey = process.env.VERIPHONE_API_KEY;
+  if (veriphoneKey) {
+    try {
+      const v = await lookupViaVeriphone(phoneNumber, veriphoneKey);
+      if (v.ok) {
+        console.log(`[CarrierAPI] Veriphone lookup succeeded: ${v.data.carrier}`);
+        return v.data;
+      }
+      console.warn('[CarrierAPI] Veriphone lookup failed:', v.message || v.code);
+    } catch (e) {
+      console.warn('[CarrierAPI] Veriphone network error:', e.message || e);
+    }
+  }
+
+  // Try IPQS as secondary fallback
   let apiWorked = false;
   let apiResponse = null;
-
   if (apiKey && apiKey !== 'YOUR_IPQS_KEY_HERE') {
     try {
       const cleanPhone = phoneNumber.replace(/\D/g, '');
@@ -29,47 +97,48 @@ async function lookupPhone(phoneNumber, apiKey, options = {}) {
           fraud_score: data.fraud_score || 0,
           risky: data.fraud_score > 75,
           isMock: false,
+          provider: 'ipqs',
+          provider_display: 'IPQualityScore',
           raw: data
         };
       } else {
-        console.warn(`[CarrierAPI] API returned error: ${data.message}`);
-        // If credits are empty or account is duplicate, we proceed to hybrid fallback
+        console.warn(`[CarrierAPI] IPQS API returned error: ${data.message}`);
       }
     } catch (error) {
-      console.error('[CarrierAPI] Network Error:', error.message);
+      console.error('[CarrierAPI] IPQS Network Error:', error.message);
     }
   }
 
-  // --- FALLBACK LOGIC ---
-  // If API failed or was blocked, return honest carrier uncertainty plus a live session ISP hint.
-  if (!apiWorked) {
-    const sessionNetwork = await lookupSessionNetwork(options.clientIp);
-    
-    return {
-      valid: true,
-      carrier: sessionNetwork.isp || sessionNetwork.org || 'Unknown carrier',
-      carrier_display: sessionNetwork.isp || sessionNetwork.org || 'Unknown carrier',
-      carrier_source: sessionNetwork.source,
-      carrier_confidence: sessionNetwork.confidence,
-      session_isp: sessionNetwork.isp || sessionNetwork.org || 'Unknown ISP',
-      session_org: sessionNetwork.org || 'Unknown organization',
-      session_asn: sessionNetwork.asn || 'Unknown ASN',
-      session_country: sessionNetwork.country || 'Unknown country',
-      line_type: 'Mobile',
-      mcc: '---',
-      mnc: '---',
-      sim_changed: false,
-      last_sim_swap: 'Unavailable without carrier lookup',
-      fraud_score: 12,
-      risky: false,
-      isMock: true,
-      lookupMethod: 'session-network-lookup',
-      note: 'Paid phone carrier lookup unavailable; using live session ISP as a network hint.',
-      error: 'API_CREDITS_EXHAUSTED'
-    };
+  if (apiWorked) {
+    console.log(`[CarrierAPI] IPQS lookup succeeded: ${apiResponse.carrier}`);
+    return apiResponse;
   }
 
-  return apiResponse;
+  // --- FINAL FALLBACK: Session-network lookup ---
+  const sessionNetwork = await lookupSessionNetwork(options.clientIp);
+    
+  return {
+    valid: true,
+    carrier: sessionNetwork.isp || sessionNetwork.org || 'Unknown carrier',
+    carrier_display: sessionNetwork.isp || sessionNetwork.org || 'Unknown carrier',
+    carrier_source: sessionNetwork.source,
+    carrier_confidence: sessionNetwork.confidence,
+    session_isp: sessionNetwork.isp || sessionNetwork.org || 'Unknown ISP',
+    session_org: sessionNetwork.org || 'Unknown organization',
+    session_asn: sessionNetwork.asn || 'Unknown ASN',
+    session_country: sessionNetwork.country || 'Unknown country',
+    line_type: 'Mobile',
+    mcc: '---',
+    mnc: '---',
+    sim_changed: false,
+    last_sim_swap: 'Unavailable without carrier lookup',
+    fraud_score: 12,
+    risky: false,
+    isMock: true,
+    lookupMethod: 'session-network-lookup',
+    note: 'Paid phone carrier lookup unavailable; using live session ISP as a network hint.',
+    error: 'API_CREDITS_EXHAUSTED'
+  };
 }
 
 function normalizeClientIp(clientIp) {

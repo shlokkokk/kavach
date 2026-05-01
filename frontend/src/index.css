@@ -1157,6 +1157,783 @@ tr:last-child td {
   transition: transform 220ms ease, box-shadow 260ms ease, border-color 220ms ease;
 }
 
+.spin {
+  animation: rotate-slow 1s linear infinite;
+}
+
+.simswap-page {
+  gap: 20px;
+}
+
+.simswap-hero {
+  padding: 24px 28px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: 20px;
+  align-items: center;
+  background:
+    radial-gradient(circle at top left, rgba(245, 158, 11, 0.15), transparent 35%),
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(13, 27, 46, 0.96), rgba(10, 21, 37, 0.98));
+}
+
+.simswap-hero-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+}
+
+.simswap-hero-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff1d4;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.4) 0%, rgba(245, 158, 11, 0.1) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.2);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.simswap-hero-icon::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1px dashed rgba(245, 158, 11, 0.2);
+  animation: rotate-slow 15s linear infinite;
+}
+
+.simswap-hero-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.simswap-kicker-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.simswap-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #ffcc74;
+}
+
+.simswap-hero-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.simswap-meta-block {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 14px 16px;
+  background: rgba(4, 11, 21, 0.46);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.simswap-meta-block span {
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 0.67rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.simswap-meta-block strong {
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.simswap-hero-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.simswap-status-chip,
+.simswap-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.simswap-connection-live {
+  background: rgba(0, 200, 83, 0.12);
+  color: #5ef2a1;
+  border-color: rgba(0, 200, 83, 0.32);
+}
+
+.simswap-connection-connecting {
+  background: rgba(59, 130, 246, 0.12);
+  color: #91bfff;
+  border-color: rgba(59, 130, 246, 0.32);
+}
+
+.simswap-connection-idle,
+.simswap-connection-offline {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-text-secondary);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.simswap-risk-low {
+  background: rgba(0, 200, 83, 0.12);
+  color: #5ef2a1;
+  border-color: rgba(0, 200, 83, 0.32);
+}
+
+.simswap-risk-medium {
+  background: rgba(255, 184, 0, 0.12);
+  color: #ffd26a;
+  border-color: rgba(255, 184, 0, 0.3);
+}
+
+.simswap-risk-high {
+  background: rgba(255, 59, 59, 0.12);
+  color: #ff8c96;
+  border-color: rgba(255, 59, 59, 0.3);
+}
+
+.simswap-onboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+  gap: 20px;
+  align-items: stretch;
+  position: relative;
+}
+
+/* Background mesh glow */
+.simswap-onboard::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  left: -100px;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, transparent 70%);
+  z-index: 0;
+  pointer-events: none;
+  filter: blur(40px);
+}
+
+.simswap-onboard-card,
+.simswap-preview-card {
+  background: linear-gradient(165deg, rgba(13, 27, 46, 0.9) 0%, rgba(7, 15, 28, 0.95) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.simswap-onboard-card,
+.simswap-preview-card,
+.simswap-risk-panel,
+.simswap-action-panel,
+.simswap-sidefacts-panel,
+.simswap-node-panel,
+.simswap-stream-panel {
+  padding: 28px;
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.simswap-onboard-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle at top right, rgba(245, 158, 11, 0.08), transparent 70%);
+  pointer-events: none;
+}
+
+.simswap-onboard-intro {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  margin-bottom: 32px;
+}
+
+.simswap-onboard-intro h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.25;
+  margin-top: 4px;
+  background: linear-gradient(135deg, #fff 0%, #ffcc74 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.simswap-onboard-intro p {
+  margin-top: 12px;
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  max-width: 58ch;
+}
+
+.simswap-onboard-badge {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, transparent 70%);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  color: #ffcc74;
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.1);
+  position: relative;
+}
+
+.simswap-onboard-badge::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px dashed rgba(245, 158, 11, 0.3);
+  animation: rotate-slow 12s linear infinite;
+}
+
+.simswap-onboard-badge::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(245, 158, 11, 0.1);
+}
+
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.simswap-input-grid {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.simswap-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+}
+
+.simswap-field span {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #f59e0b;
+  opacity: 0.8;
+  font-weight: 600;
+}
+
+.simswap-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.simswap-input-wrapper .input-icon {
+  position: absolute;
+  left: 18px;
+  color: rgba(245, 158, 11, 0.5);
+  pointer-events: none;
+  transition: color 0.2s ease;
+  z-index: 2;
+}
+
+.simswap-input-wrapper .input-chevron {
+  position: absolute;
+  right: 18px;
+  color: rgba(245, 158, 11, 0.4);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.simswap-select,
+.simswap-phone-input {
+  width: 100%;
+  height: 64px;
+  font-size: 1.05rem;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  background: rgba(4, 11, 21, 0.6);
+  border-radius: 16px;
+  padding: 0 40px 0 50px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  appearance: none;
+}
+
+.simswap-phone-input {
+  font-size: 1.3rem;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: #fff;
+}
+
+.simswap-select:focus,
+.simswap-phone-input:focus {
+  border-color: #f59e0b;
+  background: rgba(6, 14, 26, 0.85);
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.08), 0 8px 20px rgba(0, 0, 0, 0.3);
+  outline: none;
+}
+
+.simswap-select:focus + .input-icon,
+.simswap-phone-input:focus + .input-icon {
+  color: #f59e0b;
+}
+
+.simswap-preview-row {
+  margin: 0 0 28px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.simswap-preview-chip {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 16px 20px;
+  background: rgba(8, 18, 31, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.simswap-preview-chip:hover {
+  border-color: rgba(245, 158, 11, 0.25);
+  transform: translateY(-2px);
+}
+
+.simswap-preview-chip::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+}
+
+.simswap-preview-chip span {
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.simswap-preview-chip strong {
+  font-size: 1rem;
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+
+.simswap-register-button {
+  width: 100%;
+  height: 64px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #0c1622;
+  font-weight: 800;
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+  border-radius: 18px;
+  box-shadow: 0 12px 34px rgba(245, 158, 11, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: all 0.3s ease;
+}
+
+.simswap-register-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 48px rgba(245, 158, 11, 0.35);
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+}
+
+.simswap-register-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.simswap-register-button:disabled {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.2);
+  box-shadow: none;
+  cursor: not-allowed;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.simswap-preview-grid,
+.simswap-overview-grid,
+.simswap-data-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.simswap-preview-grid,
+.simswap-overview-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.simswap-layout {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.simswap-rail,
+.simswap-main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.simswap-rail {
+  position: sticky;
+  top: calc(var(--navbar-height) + 22px);
+}
+
+.simswap-gauge-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0 18px;
+}
+
+.simswap-risk-stats,
+.simswap-sidefacts {
+  display: grid;
+  gap: 10px;
+}
+
+.simswap-data-point {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: rgba(4, 11, 21, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.simswap-data-point span {
+  font-family: var(--font-mono);
+  font-size: 0.67rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+}
+
+.simswap-data-point strong {
+  font-size: 0.95rem;
+  line-height: 1.4;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.simswap-data-point strong[data-accent='true'] {
+  color: #ffcc74;
+}
+
+.simswap-action-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.simswap-action-button {
+  width: 100%;
+  min-height: 52px;
+}
+
+.simswap-action-button.btn-outline {
+  color: #ffcc74;
+  border-color: rgba(245, 158, 11, 0.28);
+}
+
+.simswap-action-button.btn-outline:hover {
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.simswap-attack-lab {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.simswap-lab-button {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(4, 11, 21, 0.52);
+  color: var(--color-text-secondary);
+  border-radius: 14px;
+  padding: 12px 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.simswap-lab-button:hover {
+  border-color: rgba(245, 158, 11, 0.3);
+  color: var(--color-text);
+  transform: translateY(-1px);
+}
+
+.simswap-overview-card {
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 18px;
+  padding: 18px;
+  background: linear-gradient(180deg, rgba(10, 22, 40, 0.92), rgba(5, 12, 23, 0.88));
+  min-width: 0;
+}
+
+.simswap-overview-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.simswap-overview-card strong {
+  display: block;
+  font-size: 1.08rem;
+  line-height: 1.35;
+  margin-bottom: 6px;
+  overflow-wrap: anywhere;
+}
+
+.simswap-overview-card p {
+  color: var(--color-text-secondary);
+  font-size: 0.84rem;
+}
+
+.simswap-tone-info {
+  border-color: rgba(59, 130, 246, 0.22);
+}
+
+.simswap-tone-success {
+  border-color: rgba(0, 200, 83, 0.2);
+}
+
+.simswap-tone-danger {
+  border-color: rgba(255, 59, 59, 0.22);
+}
+
+.simswap-alert-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 22px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 59, 59, 0.28);
+  background:
+    radial-gradient(circle at top left, rgba(255, 59, 59, 0.14), transparent 34%),
+    linear-gradient(135deg, rgba(69, 10, 10, 0.95), rgba(119, 18, 28, 0.94));
+  box-shadow: 0 20px 50px rgba(165, 34, 44, 0.22);
+}
+
+.simswap-alert-icon {
+  width: 62px;
+  height: 62px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ff8c96;
+  flex-shrink: 0;
+}
+
+.simswap-alert-copy {
+  flex: 1;
+}
+
+.simswap-alert-copy h3 {
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.simswap-alert-copy p {
+  color: #f6c4cb;
+}
+
+.simswap-node-hero {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.simswap-node-hero > div {
+  border-radius: 18px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(4, 11, 21, 0.52);
+}
+
+.simswap-node-hero span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 0.67rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.simswap-node-hero strong {
+  font-size: 1.08rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.simswap-data-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.simswap-raw-card {
+  margin-top: 18px;
+  padding: 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  background: rgba(8, 18, 31, 0.75);
+}
+
+.simswap-stream-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 260px;
+  max-height: 640px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.simswap-empty-state {
+  min-height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  gap: 10px;
+  color: var(--color-text-secondary);
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  background: rgba(4, 11, 21, 0.42);
+  padding: 28px;
+}
+
+.simswap-empty-state p {
+  max-width: 48ch;
+}
+
+.simswap-event-card {
+  border-left: 5px solid transparent;
+  border-radius: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(4, 11, 21, 0.54);
+  padding: 18px;
+}
+
+.simswap-event-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.simswap-event-type {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-family: var(--font-mono);
+  font-size: 0.67rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.simswap-event-card p {
+  color: var(--color-text);
+  line-height: 1.55;
+}
+
+.simswap-rule-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.simswap-rule-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255, 59, 59, 0.12);
+  color: #ff8c96;
+  border: 1px solid rgba(255, 59, 59, 0.22);
+  font-family: var(--font-mono);
+  font-size: 0.67rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 @keyframes fade-up-in {
   from {
     opacity: 0;
@@ -1486,5 +2263,113 @@ body::before {
   .sim-grid {
     grid-template-columns: 1fr;
   }
+
+  .simswap-hero,
+  .simswap-onboard,
+  .simswap-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .simswap-rail {
+    position: static;
+  }
+
+  .simswap-data-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .simswap-preview-grid,
+  .simswap-overview-grid,
+  .simswap-node-hero,
+  .simswap-hero-meta,
+  .simswap-preview-row {
+    grid-template-columns: 1fr;
+  }
+
+  .simswap-input-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .simswap-alert-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .simswap-hero,
+  .simswap-onboard-card,
+  .simswap-preview-card,
+  .simswap-risk-panel,
+  .simswap-action-panel,
+  .simswap-sidefacts-panel,
+  .simswap-node-panel,
+  .simswap-stream-panel {
+    padding: 18px;
+  }
+
+  .simswap-hero-main,
+  .simswap-onboard-intro {
+    flex-direction: column;
+  }
+
+  .simswap-data-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .simswap-meta-block strong,
+  .simswap-node-hero strong,
+  .simswap-overview-card strong {
+    font-size: 1rem;
+  }
+}
+
+
+.simswap-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.simswap-attack-lab-integrated {
+  margin: 12px 0 20px;
+  padding: 20px;
+  background: rgba(245, 158, 11, 0.04);
+  border: 1px solid rgba(245, 158, 11, 0.12);
+  border-radius: 18px;
+}
+
+.simswap-lab-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.simswap-lab-chip {
+  padding: 8px 16px;
+  background: rgba(4, 11, 21, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.simswap-lab-chip:hover {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.simswap-demo-button {
+  margin-left: auto;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 

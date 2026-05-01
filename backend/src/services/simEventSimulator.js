@@ -13,14 +13,11 @@ const RISK_RULES = [
   { id: 'MULTIPLE_FAILED_AUTH', weight: 20, desc: '3+ failed auth attempts' },
 ];
 
-/**
- * Initialize a sensor for a phone number
- */
-function initSensor(phoneNumber) {
-  const state = {
+function createInitialState(phoneNumber) {
+  return {
     phoneNumber,
     simSerial: '89911234567890123456',
-    deviceId: `DEV-${Math.random().toString(36).substring(7).toUpperCase()}`,
+    deviceId: `DEV-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
     location: 'Surat, Gujarat',
     lastOtpTime: null,
     failedAttempts: 0,
@@ -28,9 +25,51 @@ function initSensor(phoneNumber) {
     events: [],
     alerts: [],
     triggeredRules: [],
-    isFrozen: false
+    isFrozen: false,
+    carrierData: null,
+    lastScanAt: null,
+    updatedAt: new Date().toISOString(),
   };
+}
+
+function touchState(state) {
+  state.updatedAt = new Date().toISOString();
+}
+
+/**
+ * Initialize a sensor for a phone number
+ */
+function initSensor(phoneNumber, options = {}) {
+  const { forceReset = false } = options;
+  const existing = ACTIVE_SENSORS.get(phoneNumber);
+
+  if (existing && !forceReset) {
+    return existing;
+  }
+
+  const state = createInitialState(phoneNumber);
   ACTIVE_SENSORS.set(phoneNumber, state);
+  return state;
+}
+
+function getSensorState(phoneNumber) {
+  return ACTIVE_SENSORS.get(phoneNumber) || null;
+}
+
+function markSensorFrozen(phoneNumber) {
+  const state = initSensor(phoneNumber);
+  state.isFrozen = true;
+  touchState(state);
+  return state;
+}
+
+function markSensorSafe(phoneNumber) {
+  const state = initSensor(phoneNumber);
+  state.riskScore = 5;
+  state.alerts = [];
+  state.triggeredRules = [];
+  state.isFrozen = false;
+  touchState(state);
   return state;
 }
 
@@ -64,7 +103,7 @@ function injectAnomaly(socket, phoneNumber, anomalyType) {
     case 'OTP_FLOOD':
       state.lastOtpTime = new Date();
       state.triggeredRules.push('RAPID_OTP_REQUEST');
-      event = makeEvent(phoneNumber, 'OTP_REQUEST', 'CRITICAL', '⚠️ OTP requested for HDFC Bank login. Request from suspicious session!', state.triggeredRules);
+      event = makeEvent(phoneNumber, 'OTP_REQUEST', 'CRITICAL', 'OTP requested for HDFC Bank login. Request from suspicious session.', state.triggeredRules);
       break;
 
     case 'AUTH_FAILURE':
@@ -84,17 +123,19 @@ function injectAnomaly(socket, phoneNumber, anomalyType) {
 
     event.riskScore = state.riskScore;
     state.events.unshift(event);
+    touchState(state);
     socket.emit('sim-event', event);
 
     if (state.riskScore >= 85) {
       const alert = {
         id: uuidv4(),
-        message: 'SIM SWAP ATTACK DETECTED — High probability of account takeover!',
+        message: 'SIM SWAP ATTACK DETECTED - High probability of account takeover.',
         riskScore: state.riskScore,
         timestamp: new Date().toISOString(),
         triggeredRules: uniqueRules
       };
       state.alerts.push(alert);
+      touchState(state);
       socket.emit('threat-alert', alert);
     }
   }
@@ -116,6 +157,12 @@ async function performIntegrityScan(socket, phoneNumber, apiKey) {
   await new Promise(r => setTimeout(r, 1500));
 
   const carrierData = await lookupPhone(phoneNumber, apiKey, { clientIp });
+  state.carrierData = carrierData;
+  state.lastScanAt = new Date().toISOString();
+  state.riskScore = carrierData.fraud_score ?? state.riskScore;
+  if (carrierData.sim_changed && !state.triggeredRules.includes('NEW_SIM_SERIAL')) {
+    state.triggeredRules.push('NEW_SIM_SERIAL');
+  }
   
   const scanEvent = makeEvent(phoneNumber, 'INTEGRITY_SCAN_COMPLETE', carrierData.risky ? 'HIGH' : 'LOW', 
     `Scan complete for ${phoneNumber}. Carrier/ISP: ${carrierData.carrier || carrierData.session_isp || 'Unknown'}. SIM Status: ${carrierData.sim_changed ? 'SWAPPED' : 'OK'}.`, 
@@ -124,6 +171,8 @@ async function performIntegrityScan(socket, phoneNumber, apiKey) {
   scanEvent.details = carrierData;
   scanEvent.riskScore = carrierData.fraud_score;
   
+  state.events.unshift(scanEvent);
+  touchState(state);
   socket.emit('sim-event', scanEvent);
   return carrierData;
 }
@@ -144,7 +193,7 @@ function makeEvent(phoneNumber, type, severity, description, triggeredRules) {
  * Legacy support for the demo button
  */
 function startDemoSequence(socket, phoneNumber) {
-  const state = initSensor(phoneNumber);
+  initSensor(phoneNumber, { forceReset: true });
   const timers = [];
   
   // Trigger events sequentially
@@ -162,6 +211,9 @@ function startDemoSequence(socket, phoneNumber) {
 
 module.exports = { 
   initSensor, 
+  getSensorState,
+  markSensorFrozen,
+  markSensorSafe,
   injectAnomaly, 
   performIntegrityScan, 
   startDemoSequence,

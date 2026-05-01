@@ -58,7 +58,15 @@ const useKavachStore = create((set, get) => ({
   setAudioLoading: (loading) => set({ audioLoading: loading }),
   
   // SIM swap actions
-  registerSim: (phoneNumber) => set({ simRegistered: true, simPhoneNumber: phoneNumber, simEvents: [], simRiskScore: 0, simAlerts: [], simFrozen: false }),
+  registerSim: (phoneNumber) => set({
+    simRegistered: true,
+    simPhoneNumber: phoneNumber,
+    simEvents: [],
+    simRiskScore: 5,
+    simAlerts: [],
+    simFrozen: false,
+    simCarrierData: null,
+  }),
   addSimEvent: (event) => set((state) => ({
     simEvents: [event, ...state.simEvents].slice(0, 100),
     simRiskScore: event.riskScore ?? state.simRiskScore,
@@ -66,11 +74,27 @@ const useKavachStore = create((set, get) => ({
   addSimAlert: (alert) => set((state) => ({
     simAlerts: [alert, ...state.simAlerts],
   })),
+  hydrateSimState: (snapshot) => set((state) => ({
+    simPhoneNumber: snapshot?.phoneNumber ?? state.simPhoneNumber,
+    simRiskScore: snapshot?.riskScore ?? state.simRiskScore,
+    simEvents: snapshot?.events ?? state.simEvents,
+    simAlerts: snapshot?.alerts ?? state.simAlerts,
+    simFrozen: snapshot?.isFrozen ?? state.simFrozen,
+    simCarrierData: snapshot?.carrierData ?? state.simCarrierData,
+  })),
   setSimRiskScore: (score) => set({ simRiskScore: score }),
   setSimCarrierData: (data) => set({ simCarrierData: data }),
   freezeTransactions: () => set({ simFrozen: true }),
   unfreezeSim: () => set({ simFrozen: false, simAlerts: [] }),
-  resetSim: () => set({ simRegistered: false, simPhoneNumber: '', simEvents: [], simRiskScore: 0, simAlerts: [], simFrozen: false }),
+  resetSim: () => set({
+    simRegistered: false,
+    simPhoneNumber: '',
+    simEvents: [],
+    simRiskScore: 0,
+    simAlerts: [],
+    simFrozen: false,
+    simCarrierData: null,
+  }),
   
   // Job scanner actions
   setJobResult: (result) => set({ jobResult: result }),
