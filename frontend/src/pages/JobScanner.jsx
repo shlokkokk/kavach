@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileSearch, Send, Upload, AlertTriangle, CheckCircle, Building2, ShieldAlert, Lightbulb, Link2, RotateCcw } from 'lucide-react';
+import { FileSearch, Send, Upload, AlertTriangle, CheckCircle, Landmark, ShieldAlert, Lightbulb, Link2, RotateCcw } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import GlowCard from '../components/shared/GlowCard';
 import ScoreGauge from '../components/shared/ScoreGauge';
@@ -71,6 +71,9 @@ export default function JobScanner() {
         res = await jobService.scanText(text);
       }
       const data = res.data?.data || res.data || res;
+      if (data.extractedText) {
+        setText(data.extractedText);
+      }
       setResult(data);
       addScan({
         id: Date.now().toString(), module: 'Job Shield', moduleColor: '#ef4444',
@@ -217,36 +220,60 @@ export default function JobScanner() {
             <div className="input-section" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <SectionLabel icon={<Upload size={14} />} text="ANALYSIS SOURCE" />
               
-              <GlowCard color="danger">
+              <GlowCard color={pdfFile ? "primary" : "danger"}>
                 <h4 style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Send size={18} style={{ color: '#ef4444' }} /> Paste Message
+                  {pdfFile ? <FileSearch size={18} style={{ color: 'var(--color-primary)' }} /> : <Send size={18} style={{ color: '#ef4444' }} />}
+                  {pdfFile ? (result ? 'Extracted PDF Text' : 'PDF Source Mode') : 'Paste Message'}
                 </h4>
-                <textarea
-                  className="input" value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  placeholder="Paste the job offer message, WhatsApp text, or SMS here..."
-                  style={{ minHeight: '180px' }}
-                  id="job-text-input"
-                  disabled={hasActiveScan || !!pdfFile}
-                />
+                
+                {pdfFile ? (
+                  <div style={{
+                    minHeight: '180px',
+                    maxHeight: '180px',
+                    overflowY: 'auto',
+                    background: 'var(--color-surface-2)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '12px',
+                    color: result ? 'var(--color-text)' : 'var(--color-muted)',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.85rem',
+                    whiteSpace: 'pre-wrap',
+                    lineHeight: 1.6
+                  }}>
+                    {text ? text : 'Text will be extracted from the PDF during forensic analysis...'}
+                  </div>
+                ) : (
+                  <textarea
+                    className="input" value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    placeholder="Paste the job offer message, WhatsApp text, or SMS here..."
+                    style={{ minHeight: '180px' }}
+                    id="job-text-input"
+                    disabled={hasActiveScan}
+                  />
+                )}
+                
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', alignItems: 'center' }}>
                   <span style={{ fontSize: '0.78rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
-                    {text.length} characters
+                    {pdfFile ? (text ? `${text.length} characters extracted` : 'Pending extraction') : `${text.length} characters`}
                   </span>
-                  <button
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => {
-                      if (hasActiveScan || pdfFile) {
-                        toast.error('Discard current scan before loading sample.');
-                        return;
-                      }
-                      setText(SAMPLE_SCAM_MESSAGE);
-                    }}
-                    id="btn-load-sample"
-                    disabled={hasActiveScan || !!pdfFile}
-                  >
-                    Load Sample Scam
-                  </button>
+                  {!pdfFile && (
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => {
+                        if (hasActiveScan) {
+                          toast.error('Discard current scan before loading sample.');
+                          return;
+                        }
+                        setText(SAMPLE_SCAM_MESSAGE);
+                      }}
+                      id="btn-load-sample"
+                      disabled={hasActiveScan}
+                    >
+                      Load Sample Scam
+                    </button>
+                  )}
                 </div>
               </GlowCard>
 
@@ -273,6 +300,31 @@ export default function JobScanner() {
                   ) : (
                     <p style={{ color: 'var(--color-muted)', fontSize: '0.9rem' }}>Drop PDF here or click to browse</p>
                   )}
+                </div>
+                
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={async () => {
+                      if (hasActiveScan || pdfFile) {
+                        toast.error('Discard current scan before loading sample.');
+                        return;
+                      }
+                      try {
+                        toast.loading('Fetching demo PDF...', { id: 'pdf-load' });
+                        const response = await fetch('/samples/demo_job_offer.pdf');
+                        const blob = await response.blob();
+                        const file = new File([blob], "demo_job_offer.pdf", { type: "application/pdf" });
+                        setPdfFile(file);
+                        toast.success('Loaded Demo PDF', { id: 'pdf-load' });
+                      } catch (err) {
+                        toast.error('Failed to load demo PDF', { id: 'pdf-load' });
+                      }
+                    }}
+                    disabled={hasActiveScan || !!pdfFile}
+                  >
+                    Load Demo PDF
+                  </button>
                 </div>
               </GlowCard>
 
@@ -450,7 +502,7 @@ export default function JobScanner() {
                     {result.companyVerification && (
                       <GlowCard>
                         <h4 style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Building2 size={18} style={{ color: '#f59e0b' }} /> Company Verification
+                          <Landmark size={18} style={{ color: '#f59e0b', overflow: 'visible' }} /> Company Verification
                         </h4>
                         <div style={{ padding: '12px', background: 'var(--color-surface-2)', borderRadius: 'var(--radius-md)' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -459,7 +511,7 @@ export default function JobScanner() {
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                             <span style={{ color: 'var(--color-muted)' }}>MCA21 Status</span>
-                            <ThreatScoreBadge level={result.companyVerification.found ? 'REAL' : 'FAKE'} />
+                            <ThreatScoreBadge level={result.companyVerification.found ? 'VERIFIED' : 'UNVERIFIED'} />
                           </div>
                           {result.companyVerification.note && (
                             <p style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)', marginTop: '8px' }}>{result.companyVerification.note}</p>

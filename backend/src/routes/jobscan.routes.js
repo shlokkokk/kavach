@@ -13,11 +13,12 @@ router.post('/scan', pdfUpload.single('file'), async (req, res, next) => {
     // If PDF uploaded, extract text
     if (req.file) {
       try {
-        const pdfParse = require('pdf-parse');
+        const pdfParse = require('pdf-parse-new');
         const pdfData = await pdfParse(req.file.buffer);
         text = pdfData.text;
       } catch (pdfErr) {
-        return res.status(400).json({ success: false, error: 'Could not parse PDF file' });
+        console.error('PDF Parse Error:', pdfErr);
+        return res.status(400).json({ success: false, error: 'Could not parse PDF file: ' + pdfErr.message });
       }
     }
 
@@ -51,6 +52,7 @@ router.post('/scan', pdfUpload.single('file'), async (req, res, next) => {
       ...analysis,
       scamScore: adjustedScore,
       companyVerification: companyVerification || { found: false, note: 'No company name detected' },
+      extractedText: req.file ? text : undefined,
     };
 
     // Show link analysis only when no-links is explicit or result is genuinely computed.

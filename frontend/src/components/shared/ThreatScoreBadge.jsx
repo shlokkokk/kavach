@@ -10,6 +10,8 @@ export default function ThreatScoreBadge({ level, score, style = {} }) {
     LEGITIMATE: { label: 'LEGITIMATE', bg: 'var(--color-safe-dim)', color: 'var(--color-safe)', border: 'rgba(0,200,83,0.3)' },
     FAKE: { label: 'AI-GENERATED', bg: 'var(--color-danger-dim)', color: 'var(--color-danger)', border: 'rgba(255,59,59,0.3)' },
     REAL: { label: 'HUMAN', bg: 'var(--color-safe-dim)', color: 'var(--color-safe)', border: 'rgba(0,200,83,0.3)' },
+    VERIFIED: { label: 'VERIFIED', bg: 'var(--color-safe-dim)', color: 'var(--color-safe)', border: 'rgba(0,200,83,0.3)' },
+    UNVERIFIED: { label: 'UNVERIFIED', bg: 'var(--color-danger-dim)', color: 'var(--color-danger)', border: 'rgba(255,59,59,0.3)' },
   };
   
   const c = config[level] || config.LOW;

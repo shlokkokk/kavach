@@ -1,8 +1,7 @@
-# KAVACH
-
 <div align="center">
   <img src="frontend/src/assets/hero.png" alt="KAVACH hero artwork" width="260" />
 
+  <h1>🛡️ KAVACH</h1>
   <h3>Digital Armor for Every Indian</h3>
   <p>
     A multi-modal cyber fraud defense platform built for <b>HackBaroda 2026</b>.
@@ -21,106 +20,80 @@
 
 ---
 
-## Why KAVACH Hits Hard
+## 🎯 The Vision
 
-Most scam defense tools fight one attack at a time.
-KAVACH is built around the idea that modern fraud is a chain:
+Most scam defense tools fight one attack at a time. KAVACH is built around the idea that modern fraud is a chain:
+1. A **fake job offer** earns trust.
+2. A **deepfake voice call** adds urgency.
+3. A **SIM swap** steals OTPs and drains accounts.
 
-1. A fake job offer earns trust.
-2. A deepfake voice call adds urgency.
-3. A SIM swap steals OTPs and drains accounts.
+KAVACH blocks that chain at every stage with an interconnected, highly-visual defense platform.
 
-KAVACH blocks that chain at every stage.
+---
 
-## The 3 Shields
+## ⚔️ The 3 Shields (Core Modules)
 
-| Module | What it stops | How it works |
-| --- | --- | --- |
-| `Voice Shield` | AI-generated voice scams and cloned-call impersonation | Audio upload or live mic recording is analyzed with DSP features like MFCC anomaly, spectral flux, pitch variance, energy consistency, and voice-print heuristics. |
-| `SIM Guard` | SIM swap fraud, OTP hijack, and device takeover signals | A live Socket.IO simulation streams telecom-style threat events, escalates risk in real time, and triggers an automatic freeze flow at critical severity. |
-| `Job Shield` | Fraudulent job offers, phishing PDFs, and pressure tactics | Text or PDF content is scanned for scam patterns, red flags are extracted, and detected companies are checked against MCA-style verification logic. |
+### 🎙️ 1. Voice Shield (Deepfake Detection)
+Analyzes live microphone input or uploaded audio files against 9 scientific features (MFCC anomaly, spectral flux, zero crossing rate, etc.).
+* **Neural Synapse Visualizer**: Real-time canvas visualization of audio data.
+* **Instant Intel**: Provides an AI-powered explanation of the threat, alongside forensic heuristics.
+* **Demo Ready**: Includes built-in AI vs Human audio sample loaders for instant testing.
 
-## What Makes The Demo Cool
+### 📱 2. SIM Guard (Telecom Identity Monitor)
+Simulates and protects against SIM swap fraud, OTP hijacking, and device takeover.
+* **Carrier Node Intelligence**: Live integration with IPQualityScore for provider lookup and carrier confidence.
+* **Socket Telemetry**: Live stream of network integrity scans and WebSocket events.
+* **Simulation Lab**: Allows the user to trigger specific attacks (Location Jump, OTP Flood) and auto-attack sequences to test the system's freeze protocols.
 
-- Real-time command center UI with animated threat cards and scan history
-- Voice deepfake analysis with feature bars, verdicts, and AI explanations
-- SIM swap attack simulation that ramps from normal activity to full incident
-- Fake job scanner with risk scoring, phrase-level red flags, and company checks
-- Graceful fallback behavior when external AI services are unavailable
+### 📄 3. Job Shield (Fraud Forensics)
+Scans text messages and PDF documents for fraudulent job offers and phishing URLs.
+* **ZeroRisk Sentinel Integration**: In-depth URL link analysis checking for typosquatting and malicious domains.
+* **NVIDIA NIM API**: LLaMA 3.1 70B powers the scam scoring, highlighting exact red flags in the text.
+* **MCA Verification**: Live company verification against government data logic.
 
-## Built With
+---
 
-- React
-- Node.js
-- Python
-- Real-time event streaming
-- AI-assisted fraud analysis
+## ⚙️ Tech Stack
 
-## Quick Start
+- **Frontend**: React 19, Vite, Framer Motion, Zustand (State Management)
+- **Backend (Node)**: Express.js, Socket.io, Multer
+- **Microservices (Python)**: `librosa` for audio forensics, heuristic URL threat analysis
+- **External APIs**: NVIDIA NIM (LLM), MCA21, IPQS (Carrier Data)
 
-### Launch The Project
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js (v18+)
+- Python (3.9+)
+- API Keys for NVIDIA NIM and IPQS in `backend/.env`
+
+### Installation & Launch
+The easiest way to launch the entire platform (Frontend, Backend, Python Audio Service) is via our unified bash script:
 
 ```bash
+# Clone the repo and navigate to the directory
+cd hackbaroda-2026
+
+# Launch all microservices
 ./start-all.sh
 ```
+*(Best run from Git Bash, WSL, or macOS/Linux terminals)*
 
-Best run from `Git Bash` or `WSL` on Windows, since the launcher is a Bash script.
+---
 
-Install the required dependencies for the project before launch, then run the command above to start the experience.
+## 🎭 Running the Demo
 
-## Demo Flow
+For the ultimate "God-Level" judge experience, follow this order:
 
-If you want the full "judge demo" experience, use this order:
-
-### 1. Job Shield
-
-- Open the fake job scanner
-- Paste the sample scam message from the UI
-- Watch red flags, scam score, and company verification appear
-
-### 2. Voice Shield
-
-- Open the deepfake detector
-- Upload `frontend/public/realistic_ai_scam.mp3`
-- Review the confidence score, audio indicators, and AI explanation
-
-### 3. SIM Guard
-
-- Open the SIM swap module
-- Register a number and trigger the demo attack
-- Watch the timeline escalate from low-risk activity to transaction freeze
-
-## Design Vibe
-
-The product is intentionally built like a cyber defense dashboard instead of a generic CRUD app:
-
-- glowing module cards
-- animated telemetry
-- threat-score visualizations
-- scan-history command center
-- high-contrast "mission control" presentation
-
-That makes it demo-friendly without losing technical substance.
-
-## Why This Matters
-
-India's fraud landscape is no longer about a single phishing SMS.
-Scammers now mix social engineering, cloned voices, fake hiring, and telecom compromise into one coordinated playbook.
-
-KAVACH answers that with one platform, three shields, and a clear story:
-
-> trust is attacked in layers, so defense must be layered too.
-
-## Built For
-
-- hackathon demo storytelling
-- cyber-fraud awareness
-- prototype validation
-- future expansion into real-world fraud intel systems
+1. **Job Shield**: Upload `demo_job_offer.pdf` or paste a WhatsApp scam message. Watch the Link Analyzer and NVIDIA NIM rip it apart and verify the company.
+2. **Voice Shield**: Open the module and hit "Load Sample AI". Watch the Neural Synapse Visualizer plot the deepfake anomalies while the heuristics gauge screams red.
+3. **SIM Guard**: Register a number. Open the **Simulation Lab** and run the "Auto Attack Sequence". Watch the live socket telemetry ramp from normal activity to a frozen bank account.
 
 ---
 
 <div align="center">
   <b>KAVACH</b><br/>
-  One platform. Three shields. Zero mercy for scammers.
+  <i>One platform. Three shields. Zero mercy for scammers.</i>
 </div>
