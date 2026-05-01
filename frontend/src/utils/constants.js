@@ -53,6 +53,8 @@ export const MAX_PDF_SIZE = 5 * 1024 * 1024; // 5MB
 export const SAMPLE_SCAM_MESSAGE = `Congratulations! You have been selected for Work From Home job at Reliance Digital Works Pvt Ltd.
 Salary: 45,000/month. No experience required. Only 2 hours daily work.
 To confirm your slot, pay ₹500 registration fee via GPay to 9876543210.
+Complete onboarding now: http://bit.ly/offer-now
+Salary portal verification: https://secure-login-check.xyz/payroll
 WhatsApp us immediately: wa.me/919876543210
 Limited seats! Apply fast. Interview waived for selected candidates.
 HR Manager: Priya Sharma | hr.reliancedigitalworks@gmail.com`;

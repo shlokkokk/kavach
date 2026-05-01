@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileSearch, Send, Upload, AlertTriangle, CheckCircle, Building2, ShieldAlert, Lightbulb, Link2 } from 'lucide-react';
+import { FileSearch, Send, Upload, AlertTriangle, CheckCircle, Building2, ShieldAlert, Lightbulb, Link2, RotateCcw } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import GlowCard from '../components/shared/GlowCard';
 import ScoreGauge from '../components/shared/ScoreGauge';
@@ -18,19 +18,27 @@ export default function JobScanner() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const { addScan } = useKavachStore();
+  const hasActiveScan = Boolean(result);
 
   const onDrop = useCallback((accepted) => {
+    if (hasActiveScan || pdfFile) {
+      toast.error('Discard current scan before uploading a new file.');
+      return;
+    }
     if (accepted.length > 0) {
       setPdfFile(accepted[0]);
-      setText('');
     }
-  }, []);
+  }, [hasActiveScan, pdfFile]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop, accept: { 'application/pdf': ['.pdf'] }, maxFiles: 1, multiple: false,
+    onDrop, accept: { 'application/pdf': ['.pdf'] }, maxFiles: 1, multiple: false, disabled: hasActiveScan || !!pdfFile,
   });
 
   const handleScan = async () => {
+    if (hasActiveScan) {
+      toast.error('Discard current scan before starting a new one.');
+      return;
+    }
     if (!text.trim() && !pdfFile) {
       toast.error('Enter message text or upload PDF');
       return;
@@ -60,6 +68,14 @@ export default function JobScanner() {
     }
   };
 
+  const resetJobScan = () => {
+    setText('');
+    setPdfFile(null);
+    setResult(null);
+    setLoading(false);
+    toast.success('Cleared current scan. Ready for a fresh check.');
+  };
+
   const highlightRedFlags = (originalText, redFlags) => {
     if (!redFlags || redFlags.length === 0) return originalText;
     let highlighted = originalText;
@@ -73,6 +89,56 @@ export default function JobScanner() {
       }
     });
     return highlighted;
+  };
+
+  const getLinkVerdictStyle = (verdict) => {
+    if (verdict === 'HIGH_RISK') {
+      return {
+        border: 'var(--color-danger)',
+        bg: 'var(--color-danger-dim)',
+        pillBg: 'rgba(239, 68, 68, 0.2)',
+        pillColor: 'var(--color-danger)',
+      };
+    }
+    if (verdict === 'MEDIUM_RISK') {
+      return {
+        border: 'rgba(239, 68, 68, 0.75)',
+        bg: 'rgba(239, 68, 68, 0.1)',
+        pillBg: 'rgba(239, 68, 68, 0.16)',
+        pillColor: 'rgba(248, 113, 113, 1)',
+      };
+    }
+    return {
+      border: 'rgba(239, 68, 68, 0.55)',
+      bg: 'rgba(239, 68, 68, 0.08)',
+      pillBg: 'rgba(239, 68, 68, 0.12)',
+      pillColor: 'rgba(252, 165, 165, 1)',
+    };
+  };
+
+  const getSeverityStyle = (severity) => {
+    if (severity === 'HIGH') {
+      return {
+        border: 'var(--color-danger)',
+        bg: 'var(--color-danger-dim)',
+        text: 'var(--color-danger)',
+        badgeStyle: { background: 'rgba(239, 68, 68, 0.2)', color: 'var(--color-danger)' },
+      };
+    }
+    if (severity === 'MEDIUM') {
+      return {
+        border: 'rgba(239, 68, 68, 0.75)',
+        bg: 'rgba(239, 68, 68, 0.1)',
+        text: 'rgba(248, 113, 113, 1)',
+        badgeStyle: { background: 'rgba(239, 68, 68, 0.16)', color: 'rgba(248, 113, 113, 1)' },
+      };
+    }
+    return {
+      border: 'rgba(239, 68, 68, 0.55)',
+      bg: 'rgba(239, 68, 68, 0.08)',
+      text: 'rgba(252, 165, 165, 1)',
+      badgeStyle: { background: 'rgba(239, 68, 68, 0.12)', color: 'rgba(252, 165, 165, 1)' },
+    };
   };
 
   return (
@@ -112,16 +178,28 @@ export default function JobScanner() {
               </h4>
               <textarea
                 className="input" value={text}
-                onChange={(e) => { setText(e.target.value); setPdfFile(null); }}
+                onChange={(e) => setText(e.target.value)}
                 placeholder="Paste the job offer message, WhatsApp text, or SMS here..."
                 style={{ minHeight: '200px' }}
                 id="job-text-input"
+                disabled={hasActiveScan || !!pdfFile}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.78rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
                   {text.length} characters
                 </span>
-                <button className="btn btn-ghost btn-sm" onClick={() => { setText(SAMPLE_SCAM_MESSAGE); setPdfFile(null); }} id="btn-load-sample">
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => {
+                    if (hasActiveScan || pdfFile) {
+                      toast.error('Discard current scan before loading sample.');
+                      return;
+                    }
+                    setText(SAMPLE_SCAM_MESSAGE);
+                  }}
+                  id="btn-load-sample"
+                  disabled={hasActiveScan || !!pdfFile}
+                >
                   Load Sample Scam
                 </button>
               </div>
@@ -132,10 +210,16 @@ export default function JobScanner() {
                 <Upload size={18} style={{ color: '#ef4444' }} /> Or Upload PDF
               </h4>
               <div {...getRootProps()} className={`upload-zone ${isDragActive ? 'active' : ''}`}
-                style={{ padding: '24px', background: 'var(--color-surface-2)', border: `2px dashed ${isDragActive ? '#ef4444' : 'var(--color-border)'}` }}
+                style={{
+                  padding: '24px',
+                  background: 'var(--color-surface-2)',
+                  border: `2px dashed ${isDragActive ? '#ef4444' : 'var(--color-border)'}`,
+                  cursor: hasActiveScan || pdfFile ? 'not-allowed' : 'pointer',
+                  opacity: hasActiveScan || pdfFile ? 0.75 : 1,
+                }}
                 id="job-pdf-upload"
               >
-                <input {...getInputProps()} />
+                <input {...getInputProps()} disabled={hasActiveScan || !!pdfFile} />
                 {pdfFile ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <FileSearch size={20} style={{ color: '#ef4444' }} />
@@ -147,12 +231,54 @@ export default function JobScanner() {
               </div>
             </GlowCard>
 
-            <button className="btn btn-primary btn-lg" onClick={handleScan} disabled={loading || (!text.trim() && !pdfFile)}
+            <button className="btn btn-primary btn-lg" onClick={handleScan} disabled={loading || hasActiveScan || (!text.trim() && !pdfFile)}
               style={{ width: '100%' }} id="btn-scan-job">
               {loading ? 'Scanning...' : '🔍 Scan for Fraud'}
             </button>
 
+            {(text.trim() || pdfFile || result) && (
+              <button
+                className="btn btn-outline btn-sm"
+                type="button"
+                onClick={resetJobScan}
+                disabled={loading}
+                style={{ width: '100%', color: '#94a3b8', borderColor: 'rgba(148, 163, 184, 0.35)' }}
+              >
+                <RotateCcw size={14} /> Discard Current Scan
+              </button>
+            )}
+
             {loading && <ShieldLoader text="AI analyzing message patterns..." />}
+
+            {/* AI Explanation moved left for better balance */}
+            {result?.explanation && (
+              <GlowCard>
+                <h4 style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Lightbulb size={18} style={{ color: 'var(--color-warning)' }} /> AI Analysis
+                </h4>
+                <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', lineHeight: 1.7, fontStyle: 'italic' }}>
+                  "{result.explanation}"
+                </p>
+                {result.recommendedAction && (
+                  <div style={{ marginTop: '12px', padding: '12px', background: 'var(--color-primary-dim)', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--color-primary)' }}>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--color-primary)', fontFamily: 'var(--font-mono)', marginBottom: '4px' }}>RECOMMENDED ACTION</div>
+                    <div style={{ fontSize: '0.88rem' }}>{result.recommendedAction}</div>
+                  </div>
+                )}
+              </GlowCard>
+            )}
+
+            {/* Flagged message moved left for better balance */}
+            {text && result?.redFlags && result.redFlags.length > 0 && (
+              <GlowCard>
+                <h4 style={{ marginBottom: '12px' }}>Flagged Message</h4>
+                <div
+                  className="red-flag-text"
+                  style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', lineHeight: 1.8, padding: '16px', background: 'var(--color-surface-2)', borderRadius: 'var(--radius-md)', whiteSpace: 'pre-wrap' }}
+                  dangerouslySetInnerHTML={{ __html: highlightRedFlags(text, result.redFlags) }}
+                />
+              </GlowCard>
+            )}
           </div>
 
           {/* Results side */}
@@ -182,6 +308,9 @@ export default function JobScanner() {
                     </h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                       {result.redFlags.map((flag, i) => (
+                        (() => {
+                          const severityStyle = getSeverityStyle(flag.severity);
+                          return (
                         <motion.div
                           key={i}
                           className="job-flag-card"
@@ -189,12 +318,19 @@ export default function JobScanner() {
                           animate={{ opacity: 1, x: 0 }}
                           whileHover={{ x: 4 }}
                           transition={{ delay: i * 0.08 }}
-                          style={{ padding: '12px', background: 'var(--color-danger-dim)', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--color-danger)' }}
+                          style={{
+                            padding: '12px',
+                            background: severityStyle.bg,
+                            borderRadius: 'var(--radius-md)',
+                            borderLeft: `3px solid ${severityStyle.border}`,
+                          }}
                         >
                           <div style={{ fontWeight: 600, marginBottom: '4px', fontSize: '0.9rem' }}>"{flag.phrase}"</div>
                           <div style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)' }}>{flag.reason}</div>
-                          <span className="badge badge-danger" style={{ marginTop: '6px' }}>{flag.severity}</span>
+                          <span className="badge" style={{ marginTop: '6px', ...severityStyle.badgeStyle }}>{flag.severity}</span>
                         </motion.div>
+                          );
+                        })()
                       ))}
                     </div>
                   </GlowCard>
@@ -254,23 +390,38 @@ export default function JobScanner() {
                           <span style={{ fontWeight: 600 }}>{result.linkAnalysis.overallRiskScore ?? 0}/100</span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                          {result.linkAnalysis.results.map((item, idx) => (
-                            <div key={`${item.url}-${idx}`} style={{ padding: '12px', background: 'var(--color-warning-dim)', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--color-warning)' }}>
-                              <div style={{ fontWeight: 600, fontSize: '0.84rem', wordBreak: 'break-all' }}>{item.url}</div>
-                              <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
-                                Domain: {item.domain || 'unknown'} | Verdict: {item.verdict}
-                              </div>
-                              {Array.isArray(item.flags) && item.flags.length > 0 && (
-                                <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                  {item.flags.map((flag, flagIdx) => (
-                                    <div key={`${item.url}-flag-${flagIdx}`} style={{ fontSize: '0.78rem', color: 'var(--color-text-secondary)' }}>
-                                      • {flag.detail}
-                                    </div>
-                                  ))}
+                          {result.linkAnalysis.results.map((item, idx) => {
+                            const verdictStyle = getLinkVerdictStyle(item.verdict);
+                            return (
+                              <div
+                                key={`${item.url}-${idx}`}
+                                style={{
+                                  padding: '12px',
+                                  background: verdictStyle.bg,
+                                  borderRadius: 'var(--radius-md)',
+                                  borderLeft: `3px solid ${verdictStyle.border}`,
+                                }}
+                              >
+                                <div style={{ fontWeight: 600, fontSize: '0.84rem', wordBreak: 'break-all' }}>{item.url}</div>
+                                <div style={{ marginTop: '6px', fontSize: '0.8rem', color: 'var(--color-text-secondary)', display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
+                                  <span>Domain: {item.domain || 'unknown'}</span>
+                                  <span style={{ fontWeight: 700, color: verdictStyle.pillColor }}>{item.verdict?.replace('_', ' ') || 'UNRATED'}</span>
                                 </div>
-                              )}
-                            </div>
-                          ))}
+                                {Array.isArray(item.flags) && item.flags.length > 0 && (
+                                  <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    {item.flags.map((flag, flagIdx) => {
+                                      const severityStyle = getSeverityStyle(flag.severity);
+                                      return (
+                                        <div key={`${item.url}-flag-${flagIdx}`} style={{ fontSize: '0.78rem', color: 'var(--color-text-secondary)' }}>
+                                          <span style={{ color: severityStyle.text, fontWeight: 700 }}>{flag.severity || 'INFO'}:</span> {flag.detail}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                         {result.linkAnalysis.summary && (
                           <p style={{ marginTop: '10px', fontSize: '0.84rem', color: 'var(--color-text-secondary)' }}>{result.linkAnalysis.summary}</p>
@@ -286,33 +437,6 @@ export default function JobScanner() {
                   </GlowCard>
                 )}
 
-                {/* AI Explanation */}
-                {result.explanation && (
-                  <GlowCard>
-                    <h4 style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Lightbulb size={18} style={{ color: 'var(--color-warning)' }} /> AI Analysis
-                    </h4>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', lineHeight: 1.7, fontStyle: 'italic' }}>
-                      "{result.explanation}"
-                    </p>
-                    {result.recommendedAction && (
-                      <div style={{ marginTop: '12px', padding: '12px', background: 'var(--color-primary-dim)', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--color-primary)' }}>
-                        <div style={{ fontSize: '0.78rem', color: 'var(--color-primary)', fontFamily: 'var(--font-mono)', marginBottom: '4px' }}>RECOMMENDED ACTION</div>
-                        <div style={{ fontSize: '0.88rem' }}>{result.recommendedAction}</div>
-                      </div>
-                    )}
-                  </GlowCard>
-                )}
-
-                {/* Highlighted Text */}
-                {text && result.redFlags && result.redFlags.length > 0 && (
-                  <GlowCard>
-                    <h4 style={{ marginBottom: '12px' }}>Flagged Message</h4>
-                    <div className="red-flag-text" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', lineHeight: 1.8, padding: '16px', background: 'var(--color-surface-2)', borderRadius: 'var(--radius-md)', whiteSpace: 'pre-wrap' }}
-                      dangerouslySetInnerHTML={{ __html: highlightRedFlags(text, result.redFlags) }}
-                    />
-                  </GlowCard>
-                )}
               </motion.div>
             )}
           </AnimatePresence>
