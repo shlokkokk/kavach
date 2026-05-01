@@ -1,6 +1,4 @@
 <div align="center">
-  <img src="frontend/src/assets/hero.png" alt="KAVACH hero artwork" width="260" />
-
   <h1>🛡️ KAVACH</h1>
   <h3>Digital Armor for Every Indian</h3>
   <p>
@@ -35,9 +33,9 @@ KAVACH blocks that chain at every stage with an interconnected, highly-visual de
 
 ### 🎙️ 1. Voice Shield (Deepfake Detection)
 Analyzes live microphone input or uploaded audio files against 9 scientific features (MFCC anomaly, spectral flux, zero crossing rate, etc.).
-* **Neural Synapse Visualizer**: Real-time canvas visualization of audio data.
-* **Instant Intel**: Provides an AI-powered explanation of the threat, alongside forensic heuristics.
-* **Demo Ready**: Includes built-in AI vs Human audio sample loaders for instant testing.
+* **Neural Synapse Visualizer**: Real-time canvas visualization of audio data, showing dynamic nodes and "lightning" connections for anomalies.
+* **Instant Intel**: Provides an AI-powered explanation of the threat using our multi-LLM engine (NVIDIA NIM & Groq LLaMA 3.3), alongside forensic heuristics.
+* **Demo Ready**: Includes built-in AI vs Human audio sample loaders, live microphone recording, and an integrated custom audio player for instant testing.
 
 ### 📱 2. SIM Guard (Telecom Identity Monitor)
 Simulates and protects against SIM swap fraud, OTP hijacking, and device takeover.
@@ -46,19 +44,19 @@ Simulates and protects against SIM swap fraud, OTP hijacking, and device takeove
 * **Simulation Lab**: Allows the user to trigger specific attacks (Location Jump, OTP Flood) and auto-attack sequences to test the system's freeze protocols.
 
 ### 📄 3. Job Shield (Fraud Forensics)
-Scans text messages and PDF documents for fraudulent job offers and phishing URLs.
-* **ZeroRisk Sentinel Integration**: In-depth URL link analysis checking for typosquatting and malicious domains.
-* **NVIDIA NIM API**: LLaMA 3.1 70B powers the scam scoring, highlighting exact red flags in the text.
+Scans text messages and PDF documents for fraudulent job offers and phishing URLs using `pdf-parse-new`.
+* **Kavach URL Link Analysis**: In-depth URL link analysis checking Google Safe Browsing, VirusTotal, URLHaus, AbuseIPDB, SecurityTrails, and heuristics.
+* **Dual-AI Intelligence**: A hybrid architecture leveraging NVIDIA NIM and Groq API (LLaMA 3.3 70B Versatile) powers the deep text scam scoring and complex URL threat intelligence summarization for blazing-fast inferences.
 * **MCA Verification**: Live company verification against government data logic.
 
 ---
 
 ## ⚙️ Tech Stack
 
-- **Frontend**: React 19, Vite, Framer Motion, Zustand (State Management)
-- **Backend (Node)**: Express.js, Socket.io, Multer
-- **Microservices (Python)**: `librosa` for audio forensics, heuristic URL threat analysis
-- **External APIs**: NVIDIA NIM (LLM), MCA21, IPQS (Carrier Data)
+- **Frontend**: React 19, Vite, Framer Motion, Zustand (State Management), Vanilla CSS (Custom styling), Recharts.
+- **Backend (Node)**: Express.js, Socket.io, Multer, `pdf-parse-new`.
+- **Microservices (Python)**: `librosa` for audio forensics, heuristic URL threat analysis (`link_analyzer.py`).
+- **External APIs**: NVIDIA NIM (LLM), Groq API (LLM), MCA21, IPQS (Carrier Data), VirusTotal, Google Safe Browsing.
 
 ---
 
@@ -67,7 +65,7 @@ Scans text messages and PDF documents for fraudulent job offers and phishing URL
 ### Prerequisites
 - Node.js (v18+)
 - Python (3.9+)
-- API Keys for NVIDIA NIM and IPQS in `backend/.env`
+- API Keys: NVIDIA NIM, IPQS, GROQ, VirusTotal, Google Safe Browsing in `backend/.env`
 
 ### Installation & Launch
 The easiest way to launch the entire platform (Frontend, Backend, Python Audio Service) is via our unified bash script:
@@ -85,10 +83,10 @@ cd hackbaroda-2026
 
 ## 🎭 Running the Demo
 
-For the ultimate "God-Level" judge experience, follow this order:
+For the ultimate judge experience, follow this order:
 
-1. **Job Shield**: Upload `demo_job_offer.pdf` or paste a WhatsApp scam message. Watch the Link Analyzer and NVIDIA NIM rip it apart and verify the company.
-2. **Voice Shield**: Open the module and hit "Load Sample AI". Watch the Neural Synapse Visualizer plot the deepfake anomalies while the heuristics gauge screams red.
+1. **Job Shield**: Upload `demo_job_offer.pdf` or paste a WhatsApp scam message. Watch the Kavach Link Analyzer parse threats across VT/GSB while our Dual-AI Intelligence verifies the company and threat model.
+2. **Voice Shield**: Open the module and hit "Load Sample AI". Watch the Neural Synapse Visualizer plot the deepfake anomalies while the heuristics gauge screams red. Test the live mic recording directly in the browser.
 3. **SIM Guard**: Register a number. Open the **Simulation Lab** and run the "Auto Attack Sequence". Watch the live socket telemetry ramp from normal activity to a frozen bank account.
 
 ---
