@@ -1,10 +1,9 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileSearch, Send, Upload, AlertTriangle, CheckCircle, Building2, ExternalLink, ShieldAlert, Lightbulb } from 'lucide-react';
+import { FileSearch, Send, Upload, AlertTriangle, CheckCircle, Building2, ShieldAlert, Lightbulb, Link2 } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import GlowCard from '../components/shared/GlowCard';
 import ScoreGauge from '../components/shared/ScoreGauge';
-import ConfidenceBar from '../components/shared/ConfidenceBar';
 import ThreatScoreBadge from '../components/shared/ThreatScoreBadge';
 import ShieldLoader from '../components/shared/ShieldLoader';
 import PageWrapper from '../components/layout/PageWrapper';
@@ -232,6 +231,58 @@ export default function JobScanner() {
                         <p style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)', marginTop: '8px' }}>{result.companyVerification.note}</p>
                       )}
                     </div>
+                  </GlowCard>
+                )}
+
+                {/* Link Analysis */}
+                {result.linkAnalysis && (
+                  <GlowCard color={result.linkAnalysis.hasLinks ? 'warning' : 'primary'}>
+                    <h4 style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Link2 size={18} style={{ color: 'var(--color-warning)' }} /> Link Analysis
+                    </h4>
+
+                    {!result.linkAnalysis.hasLinks && (
+                      <div style={{ padding: '12px', background: 'var(--color-surface-2)', borderRadius: 'var(--radius-md)', fontSize: '0.88rem', color: 'var(--color-text-secondary)' }}>
+                        No links found in this message/PDF.
+                      </div>
+                    )}
+
+                    {result.linkAnalysis.hasLinks && Array.isArray(result.linkAnalysis.results) && result.linkAnalysis.results.length > 0 && (
+                      <>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '0.85rem' }}>
+                          <span style={{ color: 'var(--color-muted)' }}>Overall link risk</span>
+                          <span style={{ fontWeight: 600 }}>{result.linkAnalysis.overallRiskScore ?? 0}/100</span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                          {result.linkAnalysis.results.map((item, idx) => (
+                            <div key={`${item.url}-${idx}`} style={{ padding: '12px', background: 'var(--color-warning-dim)', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--color-warning)' }}>
+                              <div style={{ fontWeight: 600, fontSize: '0.84rem', wordBreak: 'break-all' }}>{item.url}</div>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
+                                Domain: {item.domain || 'unknown'} | Verdict: {item.verdict}
+                              </div>
+                              {Array.isArray(item.flags) && item.flags.length > 0 && (
+                                <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                  {item.flags.map((flag, flagIdx) => (
+                                    <div key={`${item.url}-flag-${flagIdx}`} style={{ fontSize: '0.78rem', color: 'var(--color-text-secondary)' }}>
+                                      • {flag.detail}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        {result.linkAnalysis.summary && (
+                          <p style={{ marginTop: '10px', fontSize: '0.84rem', color: 'var(--color-text-secondary)' }}>{result.linkAnalysis.summary}</p>
+                        )}
+                        {result.linkAnalysis.aiSummary && (
+                          <div style={{ marginTop: '10px', padding: '12px', background: 'var(--color-primary-dim)', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--color-primary)' }}>
+                            <div style={{ fontSize: '0.78rem', color: 'var(--color-primary)', fontFamily: 'var(--font-mono)', marginBottom: '4px' }}>AI LINK INSIGHT</div>
+                            <div style={{ fontSize: '0.88rem', color: 'var(--color-text-secondary)' }}>{result.linkAnalysis.aiSummary}</div>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </GlowCard>
                 )}
 
