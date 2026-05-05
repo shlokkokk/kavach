@@ -1,3 +1,5 @@
+
+
 <div align="center">
 
 <br/>
@@ -26,15 +28,7 @@
 
 ## 🎬 Demo
 
-<!-- ============================================================ -->
-<!-- VIDEO PLACEHOLDER: Replace the lines below with your video  -->
-<!-- Option 1 (GitHub-hosted):                                    -->
-<!--   https://github.com/user-attachments/assets/YOUR-VIDEO-ID  -->
-<!-- Option 2 (YouTube embed via clickable thumbnail):            -->
-<!--   [![Watch Demo](thumbnail.png)](https://youtu.be/YOUR-ID)  -->
-<!-- ============================================================ -->
-
-> **📽️ Demo video coming soon** — replace this block with your GitHub-uploaded `.mp4` or a YouTube thumbnail link.
+https://github.com/user-attachments/assets/738bb55b-e815-47ec-b110-35670f9e72b4
 
 ---
 
@@ -156,30 +150,6 @@ Scans WhatsApp messages and PDF documents for fraudulent job offers and phishing
 | **Threat Intel APIs** | VirusTotal, Google Safe Browsing, URLHaus, AbuseIPDB, SecurityTrails |
 | **Telecom Intel** | IPQualityScore (live carrier data) |
 | **Gov Data** | MCA21 company verification |
-
----
-
-## 🔑 Environment Variables
-
-Create `backend/.env` with the following keys:
-
-```env
-# AI / LLM
-NVIDIA_API_KEY=your_nvidia_nim_key
-GROQ_API_KEY=your_groq_key
-
-# Threat Intelligence
-VIRUSTOTAL_API_KEY=your_virustotal_key
-GOOGLE_SAFE_BROWSING_API_KEY=your_gsb_key
-ABUSEIPDB_API_KEY=your_abuseipdb_key
-SECURITYTRAILS_API_KEY=your_securitytrails_key
-
-# Telecom
-IPQS_API_KEY=your_ipqs_key
-
-# Service URLs (defaults shown)
-AUDIO_SERVICE_URL=http://localhost:8000
-```
 
 ---
 
