@@ -45,8 +45,8 @@ def analyze_audio_file(file_bytes: bytes, filename: str = "audio.wav") -> dict:
         tmp_path = tmp.name
     
     try:
-        # Load audio
-        y, sr = librosa.load(tmp_path, sr=16000, mono=True, duration=30)
+        # Load audio (20s window: industry-standard for speech deepfake detection, balances accuracy vs. speed)
+        y, sr = librosa.load(tmp_path, sr=16000, mono=True, duration=20)
         
         if len(y) < sr:  # Less than 1 second
             return _fallback_analysis(file_bytes, filename, start_time)

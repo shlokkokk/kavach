@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { pdfUpload } = require('../middleware/upload.middleware');
-const { analyzeJobOffer } = require('../services/nvidianim.service');
+const { analyzeJobOffer } = require('../services/ai.service');
 const { verifyCompany } = require('../services/companyVerifier.service');
 const { analyzeLinksFromText } = require('../services/urlLinkAnalyzer.service');
 
@@ -26,7 +26,7 @@ router.post('/scan', pdfUpload.single('file'), async (req, res, next) => {
       return res.status(400).json({ success: false, error: 'Message text is too short (min 10 chars)' });
     }
 
-    // Analyze with NVIDIA NIM (or fallback)
+    // Analyze with AI engine (or fallback)
     const analysis = await analyzeJobOffer(text);
     const linkAnalysis = await analyzeLinksFromText(text);
 

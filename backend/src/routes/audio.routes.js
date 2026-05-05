@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { audioUpload } = require('../middleware/upload.middleware');
 const axios = require('axios');
-const { generateAudioExplanation } = require('../services/nvidianim.service');
+const { generateAudioExplanation } = require('../services/ai.service');
 
 const AUDIO_SERVICE_URL = process.env.AUDIO_SERVICE_URL || 'http://localhost:8000';
 
@@ -25,7 +25,7 @@ router.post('/scan', audioUpload.single('file'), async (req, res, next) => {
 
       const response = await axios.post(`${AUDIO_SERVICE_URL}/analyze`, formData, {
         headers: formData.getHeaders(),
-        timeout: 30000,
+        timeout: 90000, // Increased from 30000 to give Python service time to finish
       });
       
       analysisResult = response.data;

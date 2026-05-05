@@ -1,97 +1,258 @@
 <div align="center">
-  <h1>🛡️ KAVACH</h1>
-  <h3>Digital Armor for Every Indian</h3>
-  <p>
-    A multi-modal cyber fraud defense platform built for <b>HackBaroda 2026</b>.
-    KAVACH detects <b>deepfake voice scams</b>, <b>SIM swap attacks</b>, and <b>fake job offers</b>
-    through one unified command center.
-  </p>
 
-  <p>
-    <img src="https://img.shields.io/badge/HackBaroda-2026-00c878?style=for-the-badge" alt="HackBaroda 2026" />
-    <img src="https://img.shields.io/badge/Frontend-React_19-61dafb?style=for-the-badge&logo=react&logoColor=06121c" alt="React 19" />
-    <img src="https://img.shields.io/badge/Backend-Express-111111?style=for-the-badge&logo=express" alt="Express" />
-    <img src="https://img.shields.io/badge/Audio_Service-FastAPI-0ea5a3?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
-    <img src="https://img.shields.io/badge/Status-Demo_Ready-f97316?style=for-the-badge" alt="Demo Ready" />
-  </p>
+<br/>
+
+# 🛡️ KAVACH
+### *Digital Armor for Every Indian*
+
+<p>
+  A multi-modal cyber fraud defense platform.<br/>
+  Three real-time AI shields. One command center. Zero mercy for scammers.
+</p>
+
+<p>
+  <img src="https://img.shields.io/badge/Platform-Cybersecurity-00c878?style=for-the-badge" alt="Cybersecurity" />
+  <img src="https://img.shields.io/badge/Frontend-React_19-61dafb?style=for-the-badge&logo=react&logoColor=06121c" alt="React 19" />
+  <img src="https://img.shields.io/badge/Backend-Express.js-111111?style=for-the-badge&logo=express" alt="Express" />
+  <img src="https://img.shields.io/badge/Audio_Service-FastAPI-0ea5a3?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/AI-NVIDIA_NIM-76b900?style=for-the-badge&logo=nvidia&logoColor=white" alt="NVIDIA NIM" />
+  <img src="https://img.shields.io/badge/AI-Groq_LLaMA_3.3-f55036?style=for-the-badge" alt="Groq LLaMA" />
+  <img src="https://img.shields.io/badge/Status-Demo_Ready-f97316?style=for-the-badge" alt="Demo Ready" />
+</p>
+
 </div>
 
 ---
 
-## 🎯 The Vision
+## 🎬 Demo
 
-Most scam defense tools fight one attack at a time. KAVACH is built around the idea that modern fraud is a chain:
-1. A **fake job offer** earns trust.
-2. A **deepfake voice call** adds urgency.
-3. A **SIM swap** steals OTPs and drains accounts.
+<!-- ============================================================ -->
+<!-- VIDEO PLACEHOLDER: Replace the lines below with your video  -->
+<!-- Option 1 (GitHub-hosted):                                    -->
+<!--   https://github.com/user-attachments/assets/YOUR-VIDEO-ID  -->
+<!-- Option 2 (YouTube embed via clickable thumbnail):            -->
+<!--   [![Watch Demo](thumbnail.png)](https://youtu.be/YOUR-ID)  -->
+<!-- ============================================================ -->
 
-KAVACH blocks that chain at every stage with an interconnected, highly-visual defense platform.
+> **📽️ Demo video coming soon** — replace this block with your GitHub-uploaded `.mp4` or a YouTube thumbnail link.
 
 ---
 
-## ⚔️ The 3 Shields (Core Modules)
+## 🎯 The Problem
 
-### 🎙️ 1. Voice Shield (Deepfake Detection)
-Analyzes live microphone input or uploaded audio files against 9 scientific features (MFCC anomaly, spectral flux, zero crossing rate, etc.).
-* **Neural Synapse Visualizer**: Real-time canvas visualization of audio data, showing dynamic nodes and "lightning" connections for anomalies.
-* **Instant Intel**: Provides an AI-powered explanation of the threat using our multi-LLM engine (NVIDIA NIM & Groq LLaMA 3.3), alongside forensic heuristics.
-* **Demo Ready**: Includes built-in AI vs Human audio sample loaders, live microphone recording, and an integrated custom audio player for instant testing.
+Modern fraud doesn't happen in isolation. It's a **coordinated attack chain**:
 
-### 📱 2. SIM Guard (Telecom Identity Monitor)
-Simulates and protects against SIM swap fraud, OTP hijacking, and device takeover.
-* **Carrier Node Intelligence**: Live integration with IPQualityScore for provider lookup and carrier confidence.
-* **Socket Telemetry**: Live stream of network integrity scans and WebSocket events.
-* **Simulation Lab**: Allows the user to trigger specific attacks (Location Jump, OTP Flood) and auto-attack sequences to test the system's freeze protocols.
+```
+① Fake Job Offer  →  ② Deepfake Voice Call  →  ③ SIM Swap  →  ④ Account Drained
+   (Gains Trust)         (Creates Urgency)        (Steals OTP)    (Game Over)
+```
 
-### 📄 3. Job Shield (Fraud Forensics)
-Scans text messages and PDF documents for fraudulent job offers and phishing URLs using `pdf-parse-new`.
-* **Kavach URL Link Analysis**: In-depth URL link analysis checking Google Safe Browsing, VirusTotal, URLHaus, AbuseIPDB, SecurityTrails, and heuristics.
-* **Dual-AI Intelligence**: A hybrid architecture leveraging NVIDIA NIM and Groq API (LLaMA 3.3 70B Versatile) powers the deep text scam scoring and complex URL threat intelligence summarization for blazing-fast inferences.
-* **MCA Verification**: Live company verification against government data logic.
+Existing tools tackle one threat at a time. **KAVACH breaks the chain at every stage** — simultaneously, in real time.
+
+---
+
+## ⚔️ The Three Shields
+
+### 🎙️ 1 · Voice Shield — Deepfake Audio Detection
+
+> *"If you can hear it, we can expose it."*
+
+Analyzes live microphone recordings or uploaded audio files against **9 scientific spectral features** extracted via `librosa` — the same library used in academic deepfake research.
+
+| Feature | What It Catches |
+|---|---|
+| **MFCC Anomaly** | Synthetic vocal tract patterns |
+| **Spectral Flux Consistency** | AI's unnaturally stable frequency change |
+| **Silence Purity** | Missing organic background noise |
+| **High-Freq Flatness** | Absent fricative chaos (s, f, sh sounds) |
+| **Harmonic Perfection** | "Too clean" vocal harmonics |
+| **Energy Flatness** | Robot-flat energy envelope |
+| **Pitch Variance** | Missing natural emotional intonation |
+| **Zero Crossing Rate** | Unnatural signal transitions |
+| **Breathing Pattern** | Absent or synthetic breath detection |
+
+**Key Capabilities:**
+- 🌐 **Neural Synapse Visualizer** — real-time canvas animation mapping spectral anomalies to dynamic nodes and lightning arcs
+- 🎙️ **Live Mic Recording** — capture and re-record directly in the browser with no external tools
+- 📂 **One-click Sample Loader** — built-in AI vs. Human audio demo files for instant testing
+- 🤖 **AI Forensics Report** — Dual-LLM engine (NVIDIA NIM + Groq LLaMA 3.3 70B) generates a plain-English threat explanation after every scan
+
+---
+
+### 📱 2 · SIM Guard — Telecom Identity Monitor
+
+> *"Your SIM card is the skeleton key. We protect it."*
+
+Detects and simulates SIM swap fraud, OTP hijacking, and device takeover in real time using live carrier telemetry.
+
+**Key Capabilities:**
+- 📡 **Carrier Node Intelligence** — live IPQualityScore integration for provider lookup, fraud score, and carrier confidence (no hardcoded mocks)
+- ⚡ **Live Socket Telemetry** — WebSocket event stream showing network integrity scans, anomaly spikes, and defense protocol activations as they happen
+- 🧪 **Simulation Lab** — trigger individual attacks (Location Jump, OTP Flood, Device Switch) or run the **Auto Attack Sequence** to watch the full fraud chain unfold and the freeze protocol engage
+- 🔒 **Freeze Protocol** — automated account lock simulation that triggers on confirmed SIM swap detection
+
+---
+
+### 📄 3 · Job Shield — Fraud Forensics
+
+> *"If it's too good to be true, our AI will prove it."*
+
+Scans WhatsApp messages and PDF documents for fraudulent job offers and phishing URLs with a multi-layer forensic pipeline.
+
+**Key Capabilities:**
+- 🔗 **Kavach URL Link Analyzer** — extracted URLs are checked against **6 independent threat intelligence sources** in parallel:
+  - Google Safe Browsing
+  - VirusTotal (75+ scanner engines)
+  - URLHaus malware database
+  - AbuseIPDB reputation scoring
+  - SecurityTrails domain history
+  - Heuristic pattern engine
+- 🤖 **Dual-AI Intelligence** — NVIDIA NIM + Groq LLaMA 3.3 70B Versatile provides deep scam probability scoring and URL threat summarization
+- 🏢 **MCA Company Verification** — cross-references company names against government MCA21 database logic to expose shell companies
+- 📑 **PDF Parsing** — `pdf-parse-new` extracts and analyzes full document text including embedded links
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        KAVACH Platform                          │
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │              React 19 Frontend (Vite)                    │   │
+│  │     Framer Motion · Zustand · Recharts · Socket.io-client│   │
+│  └──────────┬────────────────┬───────────────┬──────────────┘   │
+│             │                │               │                  │
+│         /audio            /job           /sim/*                 │
+│             │                │               │                  │
+│  ┌──────────▼────────────────▼───────────────▼──────────────┐   │
+│  │              Node.js / Express Backend                   │   │
+│  │              Socket.io · Multer · pdf-parse-new          │   │
+│  └──────────┬────────────────┬───────────────┬──────────────┘   │
+│             │                │               │                  │
+│     ┌───────▼──────┐  ┌──────▼──────┐  ┌────▼────────────┐      │
+│     │ Python Audio │  │  NVIDIA NIM │  │   Groq LLaMA    │      │
+│     │ Service      │  │  (LLM)      │  │   3.3 70B       │      │
+│     │ (FastAPI +   │  └─────────────┘  └─────────────────┘      │
+│     │  librosa)    │                                            │
+│     └──────────────┘                                            │
+│                                                                 │
+│  External APIs: IPQS · VirusTotal · Google Safe Browsing ·      │
+│                 URLHaus · AbuseIPDB · SecurityTrails · MCA21    │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
 ## ⚙️ Tech Stack
 
-- **Frontend**: React 19, Vite, Framer Motion, Zustand (State Management), Vanilla CSS (Custom styling), Recharts.
-- **Backend (Node)**: Express.js, Socket.io, Multer, `pdf-parse-new`.
-- **Microservices (Python)**: `librosa` for audio forensics, heuristic URL threat analysis (`link_analyzer.py`).
-- **External APIs**: NVIDIA NIM (LLM), Groq API (LLM), MCA21, IPQS (Carrier Data), VirusTotal, Google Safe Browsing.
+| Layer | Technology |
+|---|---|
+| **Frontend** | React 19, Vite, Framer Motion, Zustand, Recharts, Vanilla CSS |
+| **Backend** | Node.js, Express.js, Socket.io, Multer, `pdf-parse-new` |
+| **Audio Microservice** | Python 3.9+, FastAPI, `librosa`, `numpy`, `soundfile` |
+| **AI / LLM** | NVIDIA NIM (LLaMA), Groq API (LLaMA 3.3 70B Versatile) |
+| **Threat Intel APIs** | VirusTotal, Google Safe Browsing, URLHaus, AbuseIPDB, SecurityTrails |
+| **Telecom Intel** | IPQualityScore (live carrier data) |
+| **Gov Data** | MCA21 company verification |
 
 ---
 
-## 🚀 Quick Start
+## 🔑 Environment Variables
 
-### Prerequisites
-- Node.js (v18+)
-- Python (3.9+)
-- API Keys: NVIDIA NIM, IPQS, GROQ, VirusTotal, Google Safe Browsing in `backend/.env`
+Create `backend/.env` with the following keys:
 
-### Installation & Launch
-The easiest way to launch the entire platform (Frontend, Backend, Python Audio Service) is via our unified bash script:
+```env
+# AI / LLM
+NVIDIA_API_KEY=your_nvidia_nim_key
+GROQ_API_KEY=your_groq_key
 
-```bash
-# Clone the repo and navigate to the directory
-cd hackbaroda-2026
+# Threat Intelligence
+VIRUSTOTAL_API_KEY=your_virustotal_key
+GOOGLE_SAFE_BROWSING_API_KEY=your_gsb_key
+ABUSEIPDB_API_KEY=your_abuseipdb_key
+SECURITYTRAILS_API_KEY=your_securitytrails_key
 
-# Launch all microservices
-./start-all.sh
+# Telecom
+IPQS_API_KEY=your_ipqs_key
+
+# Service URLs (defaults shown)
+AUDIO_SERVICE_URL=http://localhost:8000
 ```
-*(Best run from Git Bash, WSL, or macOS/Linux terminals)*
 
 ---
 
 ## 🎭 Running the Demo
 
-For the ultimate judge experience, follow this order:
+For the ultimate judge / evaluator experience, run through the shields in this order:
 
-1. **Job Shield**: Upload `demo_job_offer.pdf` or paste a WhatsApp scam message. Watch the Kavach Link Analyzer parse threats across VT/GSB while our Dual-AI Intelligence verifies the company and threat model.
-2. **Voice Shield**: Open the module and hit "Load Sample AI". Watch the Neural Synapse Visualizer plot the deepfake anomalies while the heuristics gauge screams red. Test the live mic recording directly in the browser.
-3. **SIM Guard**: Register a number. Open the **Simulation Lab** and run the "Auto Attack Sequence". Watch the live socket telemetry ramp from normal activity to a frozen bank account.
+**Step 1 — Job Shield**
+> Upload `demo_job_offer.pdf` or paste a WhatsApp scam message into the text field. Watch the Kavach Link Analyzer fire across all 6 threat intel sources simultaneously while Dual-AI Intelligence verifies the company and renders a scam probability score.
+
+**Step 2 — Voice Shield**
+> Click **"Load Sample AI"**. Watch the Neural Synapse Visualizer light up with anomaly arcs as the 9-feature spectral analysis runs. Then click **"Load Sample Human"** to see the contrast. Finally, click **"Record Audio"** to test your own voice live.
+
+**Step 3 — SIM Guard**
+> Register a phone number. Open the **Simulation Lab** and hit **"Auto Attack Sequence"**. Watch the live WebSocket telemetry ramp from baseline network health → detected anomaly → confirmed SIM swap → freeze protocol engaged.
+
+---
+
+## 📁 Project Structure
+
+```
+kavach/
+├── frontend/               # React 19 + Vite app
+│   ├── src/
+│   │   ├── components/     # Shared UI components
+│   │   ├── pages/          # Voice Shield, SIM Guard, Job Shield views
+│   │   ├── store/          # Zustand state management
+│   │   └── services/       # API call wrappers
+│   └── public/
+│       └── samples/        # Demo audio files (ai_deepfake, real_human)
+│
+├── backend/                # Node.js / Express API server
+│   └── src/
+│       ├── routes/         # audio.routes.js, jobscan.routes.js, simswap.routes.js
+│       ├── services/       # ai.service.js, companyVerifier.service.js, urlLinkAnalyzer.service.js
+│       └── middleware/     # upload.middleware.js
+│
+├── audio-service/          # Python FastAPI microservice
+│   ├── main.py             # FastAPI app entry point
+│   └── analyzer.py         # librosa spectral deepfake analysis engine
+│
+├── docs/                   # Supplementary documentation
+├── start-all.sh            # One-command platform launcher
+└── kill-all.ps1            # Graceful teardown script
+```
+
+---
+
+## 🧪 Audio Sample Sourcing Guide
+
+To test Voice Shield with real-world samples:
+
+**AI / Deepfake Samples:**
+- [ElevenLabs](https://elevenlabs.io/) — Free TTS demo, download as `.mp3`
+- [HuggingFace Spaces — Bark/VITS](https://huggingface.co/spaces) — Realistic neural TTS
+- [Deepfake Audio Dataset](https://huggingface.co/datasets/garystafford/deepfake-audio-detection) — Pre-sorted synthetic clips
+
+**Human / Authentic Samples:**
+- [Wikimedia Spoken Wikipedia](https://commons.wikimedia.org/wiki/Category:Spoken_Wikipedia) — Real human recordings
+- [LibriSpeech](https://www.openslr.org/12) — Audiobook recordings dataset
+
+Place files in `frontend/public/samples/` named exactly `ai_deepfake.mp3` and `real_human.mp3`.
 
 ---
 
 <div align="center">
-  <b>KAVACH</b><br/>
-  <i>One platform. Three shields. Zero mercy for scammers.</i>
+
+**KAVACH** &nbsp;·&nbsp; *One platform. Three shields. Zero mercy for scammers.*
+
+<br/>
+
+<img src="https://img.shields.io/badge/Built_in-India_🇮🇳-FF9933?style=flat-square" />
+&nbsp;
+<img src="https://img.shields.io/badge/Open_Source-MIT-22c55e?style=flat-square" />
+
 </div>
