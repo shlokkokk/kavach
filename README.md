@@ -5,21 +5,24 @@
 <br/>
 
 # 🛡️ KAVACH
-### *Digital Armor for Every Indian*
+### *Bharat's Digital Armor. Engineered for the World.*
 
 <p>
   A multi-modal cyber fraud defense platform.<br/>
   Three real-time AI shields. One command center. Zero mercy for scammers.
 </p>
 
-<p>
-  <img src="https://img.shields.io/badge/Platform-Cybersecurity-00c878?style=for-the-badge" alt="Cybersecurity" />
-  <img src="https://img.shields.io/badge/Frontend-React_19-61dafb?style=for-the-badge&logo=react&logoColor=06121c" alt="React 19" />
-  <img src="https://img.shields.io/badge/Backend-Express.js-111111?style=for-the-badge&logo=express" alt="Express" />
-  <img src="https://img.shields.io/badge/Audio_Service-FastAPI-0ea5a3?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
-  <img src="https://img.shields.io/badge/AI-NVIDIA_NIM-76b900?style=for-the-badge&logo=nvidia&logoColor=white" alt="NVIDIA NIM" />
-  <img src="https://img.shields.io/badge/AI-Groq_LLaMA_3.3-f55036?style=for-the-badge" alt="Groq LLaMA" />
-  <img src="https://img.shields.io/badge/Status-Demo_Ready-f97316?style=for-the-badge" alt="Demo Ready" />
+<p align="center">
+  <img src="https://img.shields.io/badge/KAVACH-Cybersecurity-00c878?style=for-the-badge&logo=shield&logoColor=white" alt="Kavach" />
+  <img src="https://img.shields.io/badge/Status-Demo_Ready-f97316?style=for-the-badge&logo=rocket&logoColor=white" alt="Status" />
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/React_19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React 19" />
+  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js" />
+  <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/NVIDIA_NIM-76B900?style=for-the-badge&logo=nvidia&logoColor=white" alt="NVIDIA NIM" />
+  <img src="https://img.shields.io/badge/Groq_LLaMA_3.3-F55036?style=for-the-badge&logo=meta&logoColor=white" alt="Groq LLaMA" />
 </p>
 
 </div>
@@ -216,13 +219,13 @@ Place files in `frontend/public/samples/` named exactly `ai_deepfake.mp3` and `r
 ---
 
 <div align="center">
-
-**KAVACH** &nbsp;·&nbsp; *One platform. Three shields. Zero mercy for scammers.*
+  <img src="https://img.shields.io/badge/Designed_in_India_🇮🇳-Built_for_the_World_🌎-FF9933?style=for-the-badge&labelColor=138808&color=FF9933&logoColor=white" alt="India to Global" />
+</div>
 
 <br/>
 
-<img src="https://img.shields.io/badge/Built_in-India_🇮🇳-FF9933?style=flat-square" />
-&nbsp;
-<img src="https://img.shields.io/badge/Open_Source-MIT-22c55e?style=flat-square" />
-
+<div align="center">
+  <b>KAVACH</b> &nbsp;·&nbsp; <i>Bharat's Digital Armor, Universal Security for All</i>
+  <br/>
+  <sub>One platform. Three shields. Zero mercy for scammers.</sub>
 </div>
