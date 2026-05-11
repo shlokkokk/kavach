@@ -5,11 +5,11 @@
 <br/>
 
 # 🛡️ KAVACH
-### *Bharat's Digital Armor. Engineered for the World.*
+### Advanced Cyber Fraud Defense & Multi-Vector Threat Detection
 
 <p>
-  A multi-modal cyber fraud defense platform.<br/>
-  Three real-time AI shields. One command center. Zero mercy for scammers.
+  A unified multi-modal defense platform.<br/>
+  Three real-time AI shields. One command center.
 </p>
 
 <p align="center">
@@ -52,7 +52,7 @@ Existing tools tackle one threat at a time. **KAVACH breaks the chain at every s
 
 ### 🎙️ 1 · Voice Shield — Deepfake Audio Detection
 
-> *"If you can hear it, we can expose it."*
+> *Spectral analysis for synthetic voice detection.*
 
 Analyzes live microphone recordings or uploaded audio files against **9 scientific spectral features** extracted via `librosa` — the same library used in academic deepfake research.
 
@@ -78,7 +78,7 @@ Analyzes live microphone recordings or uploaded audio files against **9 scientif
 
 ### 📱 2 · SIM Guard — Telecom Identity Monitor
 
-> *"Your SIM card is the skeleton key. We protect it."*
+> *Real-time monitoring for telecom-based identity theft.*
 
 Detects and simulates SIM swap fraud, OTP hijacking, and device takeover in real time using live carrier telemetry.
 
@@ -92,7 +92,7 @@ Detects and simulates SIM swap fraud, OTP hijacking, and device takeover in real
 
 ### 📄 3 · Job Shield — Fraud Forensics
 
-> *"If it's too good to be true, our AI will prove it."*
+> *AI-powered forensic analysis for fraudulent recruitment.*
 
 Scans WhatsApp messages and PDF documents for fraudulent job offers and phishing URLs with a multi-layer forensic pipeline.
 
@@ -107,6 +107,15 @@ Scans WhatsApp messages and PDF documents for fraudulent job offers and phishing
 - 🤖 **Dual-AI Intelligence** — NVIDIA NIM + Groq LLaMA 3.3 70B Versatile provides deep scam probability scoring and URL threat summarization
 - 🏢 **MCA Company Verification** — cross-references company names against government MCA21 database logic to expose shell companies
 - 📑 **PDF Parsing** — `pdf-parse-new` extracts and analyzes full document text including embedded links
+
+---
+
+## ✨ High-Performance Interaction Engine
+
+- **Physics-Driven Background**: The landing page features a custom-built, interactive HTML5 canvas engine.
+- **Vortex Dynamics**: Particles simulate 3D depth with real-time attraction and orbital physics relative to the user's cursor.
+- **Energy Repulsion**: Integrated collision physics that triggers dynamic particle dispersion on interaction.
+- **Dynamic Mesh**: Proximity-based node illumination and webbed connectivity.
 
 ---
 
@@ -225,7 +234,7 @@ Place files in `frontend/public/samples/` named exactly `ai_deepfake.mp3` and `r
 <br/>
 
 <div align="center">
-  <b>KAVACH</b> &nbsp;·&nbsp; <i>Bharat's Digital Armor, Universal Security for All</i>
+  <b>KAVACH</b> &nbsp;·&nbsp; <i>Unified Digital Security & Multi-Vector Threat Protection</i>
   <br/>
-  <sub>One platform. Three shields. Zero mercy for scammers.</sub>
+  <sub>One platform. Three shields. Unified Defense.</sub>
 </div>
